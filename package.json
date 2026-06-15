@@ -1,0 +1,13 @@
+{
+  "name": "bookshelf-library",
+  "version": "1.0.0",
+  "description": "A digital bookshelf library with wooden UI — add, edit, delete and read books",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
