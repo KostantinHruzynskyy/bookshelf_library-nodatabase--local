@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📚 Bookshelf Library</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <h1>📚 My Bookshelf</h1>
+  <p class="subtitle">Your personal digital library</p>
+  <div class="controls">
+    <input id="search" type="text" placeholder="Search by title, author, or description...">
+    <span id="bookCount" class="book-count"></span>
+    <a href="/admin.html" class="btn-admin">⚙️ Admin Panel</a>
+  </div>
+</div>
+
+<!-- LIBRARY -->
+<main>
+  <div id="library"></div>
+</main>
+
+<!-- BOOK DETAIL MODAL -->
+<div id="modal" class="modal">
+  <div class="modal-card">
+    <h2 id="mTitle"></h2>
+    <p id="mAuthor" class="modal-author"></p>
+    <p id="mDesc" class="modal-desc"></p>
+    <div class="modal-actions">
+      <button id="readBtn" class="btn-read">📖 Read Book</button>
+      <button onclick="closeModal()" class="btn-close">✕ Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

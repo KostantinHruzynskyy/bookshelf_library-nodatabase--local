@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>⚙️ Admin Panel — Bookshelf Library</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: radial-gradient(ellipse at top, #1a1612, #0a0806);
+      color: #e8e0d4;
+      min-height: 100vh;
+    }
+
+    /* ---- LAYOUT ---- */
+    .admin-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .admin-header h1 {
+      font-size: 1.8rem;
+      color: #f0e6d6;
+    }
+
+    .btn-back {
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(139,90,43,0.4);
+      background: rgba(139,90,43,0.15);
+      color: #d4a574;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all 0.25s;
+    }
+
+    .btn-back:hover {
+      background: rgba(139,90,43,0.3);
+      color: #f0d0a0;
+    }
+
+    /* ---- FORM CARD ---- */
+    .form-card {
+      background: linear-gradient(160deg, #2a2218, #1e1812);
+      border: 1px solid rgba(139,90,43,0.2);
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 36px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .form-card h2 {
+      font-size: 1.15rem;
+      color: #c8956c;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(139,90,43,0.15);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-grid .full { grid-column: 1 / -1; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: #a08870;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(139,90,43,0.25);
+      background: rgba(20,16,12,0.7);
+      color: #e8e0d4;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.25s;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: #c8956c;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group input[type="color"] {
+      width: 60px;
+      height: 40px;
+      padding: 2px;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-presets {
+      display: flex;
+      gap: 6px;
+    }
+
+    .color-preset {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .color-preset:hover {
+      transform: scale(1.15);
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn {
+      padding: 11px 22px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4caf50, #388e3c);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: linear-gradient(135deg, #66bb6a, #43a047); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: #a08870;
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.15); color: #e8e0d4; }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #e53935, #c62828);
+      color: #fff;
+    }
+
+    .btn-danger:hover { background: linear-gradient(135deg, #ef5350, #d32f2f); }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      border-radius: 8px;
+    }
+
+    /* ---- BOOK LIST ---- */
+    .book-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .book-list-header h2 {
+      font-size: 1.15rem;
+      color: #c8956c;
+    }
+
+    .book-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .book-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: rgba(30,24,18,0.6);
+      border: 1px solid rgba(139,90,43,0.12);
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+
+    .book-item:hover {
+      background: rgba(40,32,24,0.7);
+    }
+
+    .book-color-dot {
+      width: 36px;
+      height: 48px;
+      border-radius: 4px 6px 6px 4px;
+      flex-shrink: 0;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .book-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .book-info .b-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #f0e6d6;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .book-info .b-author {
+      font-size: 0.82rem;
+      color: #a08870;
+    }
+
+    .book-info .b-desc {
+      font-size: 0.78rem;
+      color: #7a6a5a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .book-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-edit {
+      background: rgba(139,90,43,0.25);
+      color: #d4a574;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .btn-edit:hover { background: rgba(139,90,43,0.45); }
+
+    .btn-delete {
+      background: rgba(229,57,53,0.2);
+      color: #ef9a9a;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .btn-delete:hover { background: rgba(229,57,53,0.4); }
+
+    .empty-list {
+      text-align: center;
+      padding: 50px 20px;
+      color: #7a6a5a;
+    }
+
+    .empty-list .icon { font-size: 3rem; margin-bottom: 10px; }
+
+    /* ---- TOAST ---- */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 14px 22px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #fff;
+      z-index: 500;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .toast-success { background: linear-gradient(135deg, #4caf50, #388e3c); }
+    .toast-error { background: linear-gradient(135deg, #e53935, #c62828); }
+
+    @keyframes toastIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .book-item { flex-wrap: wrap; }
+      .book-actions { width: 100%; justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-container">
+
+  <div class="admin-header">
+    <h1>⚙️ Admin Panel</h1>
+    <a href="/" class="btn-back">← Back to Library</a>
+  </div>
+
+  <!-- ADD / EDIT FORM -->
+  <div class="form-card">
+    <h2 id="formTitle">➕ Add New Book</h2>
+    <form id="bookForm">
+      <input type="hidden" id="editId" value="">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Title *</label>
+          <input id="title" type="text" placeholder="Book title" required>
+        </div>
+        <div class="form-group">
+          <label>Author *</label>
+          <input id="author" type="text" placeholder="Author name" required>
+        </div>
+        <div class="form-group full">
+          <label>Description</label>
+          <textarea id="description" placeholder="Short description of the book..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Spine Color</label>
+          <div class="color-row">
+            <input id="color" type="color" value="#8B4513">
+            <div class="color-presets">
+              <div class="color-preset" style="background:#8B4513" data-color="#8B4513" title="Saddle Brown"></div>
+              <div class="color-preset" style="background:#2F4F4F" data-color="#2F4F4F" title="Dark Slate"></div>
+              <div class="color-preset" style="background:#800020" data-color="#800020" title="Burgundy"></div>
+              <div class="color-preset" style="background:#1B4D3E" data-color="#1B4D3E" title="Forest Green"></div>
+              <div class="color-preset" style="background:#1a1a6e" data-color="#1a1a6e" title="Navy"></div>
+              <div class="color-preset" style="background:#4a0e4e" data-color="#4a0e4e" title="Purple"></div>
+              <div class="color-preset" style="background:#b8860b" data-color="#b8860b" title="Gold"></div>
+              <div class="color-preset" style="background:#36454F" data-color="#36454F" title="Charcoal"></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Book Content</label>
+          <textarea id="content" placeholder="Paste or write the book text here..." style="min-height:120px"></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="submitBtn">💾 Add Book</button>
+        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none" onclick="resetForm()">✕ Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- BOOK LIST -->
+  <div class="book-list-header">
+    <h2>📚 Your Books (<span id="totalBooks">0</span>)</h2>
+  </div>
+  <div id="bookList" class="book-list"></div>
+
+</div>
+
+<script>
+const form = document.getElementById('bookForm');
+const formTitle = document.getElementById('formTitle');
+const editIdInput = document.getElementById('editId');
+const submitBtn = document.getElementById('submitBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const bookList = document.getElementById('bookList');
+const totalBooks = document.getElementById('totalBooks');
+
+/* COLOR PRESETS */
+document.querySelectorAll('.color-preset').forEach(preset => {
+  preset.addEventListener('click', () => {
+    document.getElementById('color').value = preset.dataset.color;
+  });
+});
+
+/* LOAD BOOKS */
+function loadBooks() {
+  fetch('/api/books')
+    .then(r => r.json())
+    .then(books => renderBookList(books));
+}
+
+function renderBookList(books) {
+  totalBooks.textContent = books.length;
+
+  if (books.length === 0) {
+    bookList.innerHTML = `
+      <div class="empty-list">
+        <div class="icon">📭</div>
+        <p>No books yet. Add your first book above!</p>
+      </div>`;
+    return;
+  }
+
+  bookList.innerHTML = books.map(book => `
+    <div class="book-item">
+      <div class="book-color-dot" style="background:${book.color || '#8B4513'}"></div>
+      <div class="book-info">
+        <div class="b-title">${esc(book.title)}</div>
+        <div class="b-author">by ${esc(book.author)}</div>
+        <div class="b-desc">${esc(book.description) || 'No description'}</div>
+      </div>
+      <div class="book-actions">
+        <button class="btn-edit" onclick='editBook(${JSON.stringify(book)})'>✏️ Edit</button>
+        <button class="btn-delete" onclick="deleteBook(${book.id})">🗑️ Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ADD / UPDATE BOOK */
+form.addEventListener('submit', e => {
+  e.preventDefault();
+
+  const data = {
+    title: document.getElementById('title').value.trim(),
+    author: document.getElementById('author').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    color: document.getElementById('color').value,
+    content: document.getElementById('content').value
+  };
+
+  const editId = editIdInput.value;
+
+  if (editId) {
+    /* UPDATE */
+    fetch(`/api/books/${editId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(() => {
+      showToast('Book updated successfully!', 'success');
+      resetForm();
+      loadBooks();
+    })
+    .catch(() => showToast('Error updating book', 'error'));
+  } else {
+    /* CREATE */
+    fetch('/api/books', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(() => {
+      showToast('Book added successfully!', 'success');
+      form.reset();
+      document.getElementById('color').value = '#8B4513';
+      loadBooks();
+    })
+    .catch(() => showToast('Error adding book', 'error'));
+  }
+});
+
+/* EDIT BOOK */
+function editBook(book) {
+  editIdInput.value = book.id;
+  document.getElementById('title').value = book.title;
+  document.getElementById('author').value = book.author;
+  document.getElementById('description').value = book.description || '';
+  document.getElementById('color').value = book.color || '#8B4513';
+  document.getElementById('content').value = '';
+
+  formTitle.textContent = '✏️ Edit Book';
+  submitBtn.textContent = '💾 Save Changes';
+  cancelBtn.style.display = 'inline-block';
+
+  /* scroll to form */
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* DELETE BOOK */
+function deleteBook(id) {
+  if (!confirm('Are you sure you want to delete this book?')) return;
+
+  fetch(`/api/books/${id}`, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(() => {
+      showToast('Book deleted!', 'success');
+      loadBooks();
+    })
+    .catch(() => showToast('Error deleting book', 'error'));
+}
+
+/* RESET FORM */
+function resetForm() {
+  editIdInput.value = '';
+  form.reset();
+  document.getElementById('color').value = '#8B4513';
+  formTitle.textContent = '➕ Add New Book';
+  submitBtn.textContent = '💾 Add Book';
+  cancelBtn.style.display = 'none';
+}
+
+/* TOAST */
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+/* ESCAPE HTML */
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+/* INIT */
+loadBooks();
+</script>
+
+</body>
+</html>
