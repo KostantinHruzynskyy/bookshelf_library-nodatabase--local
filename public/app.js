@@ -42,7 +42,6 @@ function renderBooks(data) {
     const shelf = document.createElement("div");
     shelf.className = "shelf";
 
-    /* shelf label */
     const shelfLabel = document.createElement("div");
     shelfLabel.className = "shelf-label";
     shelfLabel.textContent = `Shelf ${Math.floor(i / SHELF_SIZE) + 1}`;
@@ -53,10 +52,16 @@ function renderBooks(data) {
       const el = document.createElement("div");
       el.className = "book";
       el.style.background = book.color || "#8B4513";
+
+      const formatIcon = book.formatIcon || "📄";
+      const formatLabel = book.formatLabel || "TXT";
+
       el.innerHTML = `
         <div class="book-spine">
+          <span class="book-format-icon">${formatIcon}</span>
           <span class="book-title">${escapeHtml(book.title)}</span>
           <span class="book-author">${escapeHtml(book.author)}</span>
+          <span class="book-format-badge">${escapeHtml(formatLabel)}</span>
         </div>
       `;
       el.onclick = () => openModal(book);
@@ -77,8 +82,14 @@ function openModal(book) {
   mAuthor.textContent = "by " + book.author;
   mDesc.textContent = book.description || "No description available.";
 
+  /* Show format info in modal */
+  const formatInfo = book.formatLabel ? ` · ${book.formatIcon || "📄"} ${book.formatLabel}` : "";
+  mAuthor.textContent = "by " + book.author + formatInfo;
+
   readBtn.onclick = () => {
-    window.location.href = `/reader.html?title=${encodeURIComponent(book.title)}&file=${encodeURIComponent(book.file)}`;
+    let url = `/reader.html?title=${encodeURIComponent(book.title)}&file=${encodeURIComponent(book.file)}`;
+    if (book.id) url += `&id=${book.id}`;
+    window.location.href = url;
   };
 }
 

@@ -52,6 +52,40 @@
       color: #f0d0a0;
     }
 
+    /* ---- TABS ---- */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(139,90,43,0.25);
+      background: rgba(30,24,18,0.5);
+      color: #a08870;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all 0.25s;
+    }
+
+    .tab-btn:hover {
+      border-color: rgba(139,90,43,0.5);
+      color: #d4a574;
+    }
+
+    .tab-btn.active {
+      background: rgba(139,90,43,0.25);
+      border-color: #c8956c;
+      color: #f0d0a0;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
     /* ---- FORM CARD ---- */
     .form-card {
       background: linear-gradient(160deg, #2a2218, #1e1812);
@@ -182,10 +216,149 @@
 
     .btn-danger:hover { background: linear-gradient(135deg, #ef5350, #d32f2f); }
 
-    .btn-small {
-      padding: 6px 12px;
-      font-size: 0.78rem;
+    /* ---- UPLOAD ZONE ---- */
+    .upload-zone {
+      border: 2px dashed rgba(139,90,43,0.35);
+      border-radius: 16px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(20,16,12,0.3);
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: #c8956c;
+      background: rgba(139,90,43,0.1);
+    }
+
+    .upload-zone .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    .upload-zone .upload-text {
+      color: #a08870;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .upload-zone .upload-hint {
+      color: #7a6a5a;
+      font-size: 0.8rem;
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .format-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .format-badge {
+      padding: 4px 10px;
       border-radius: 8px;
+      background: rgba(139,90,43,0.15);
+      border: 1px solid rgba(139,90,43,0.2);
+      color: #a08870;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    /* ---- FILE PREVIEW ---- */
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: rgba(139,90,43,0.1);
+      border: 1px solid rgba(139,90,43,0.25);
+      border-radius: 12px;
+      margin-bottom: 18px;
+    }
+
+    .file-preview.show { display: flex; }
+
+    .file-preview .file-icon {
+      font-size: 2.2rem;
+      flex-shrink: 0;
+    }
+
+    .file-preview .file-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-preview .file-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #f0e6d6;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-preview .file-meta {
+      font-size: 0.78rem;
+      color: #a08870;
+    }
+
+    .file-preview .btn-remove-file {
+      background: rgba(229,57,53,0.2);
+      color: #ef9a9a;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .file-preview .btn-remove-file:hover {
+      background: rgba(229,57,53,0.4);
+    }
+
+    /* ---- UPLOAD PROGRESS ---- */
+    .upload-progress {
+      display: none;
+      margin-top: 14px;
+    }
+
+    .upload-progress.show { display: block; }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(139,90,43,0.15);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #c8956c, #4caf50);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .progress-text {
+      font-size: 0.78rem;
+      color: #a08870;
+      margin-top: 6px;
+      text-align: center;
     }
 
     /* ---- BOOK LIST ---- */
@@ -228,6 +401,10 @@
       border-radius: 4px 6px 6px 4px;
       flex-shrink: 0;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
     }
 
     .book-info {
@@ -256,6 +433,29 @@
       overflow: hidden;
       text-overflow: ellipsis;
       margin-top: 2px;
+    }
+
+    .book-meta-badges {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+
+    .badge-format {
+      background: rgba(139,90,43,0.2);
+      color: #d4a574;
+    }
+
+    .badge-size {
+      background: rgba(100,100,100,0.2);
+      color: #a08870;
     }
 
     .book-actions {
@@ -344,112 +544,328 @@
     <a href="/" class="btn-back">← Back to Library</a>
   </div>
 
-  <!-- ADD / EDIT FORM -->
-  <div class="form-card">
-    <h2 id="formTitle">➕ Add New Book</h2>
-    <form id="bookForm">
-      <input type="hidden" id="editId" value="">
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('upload')">📤 Upload Book</button>
+    <button class="tab-btn" onclick="switchTab('manual')">✏️ Write Manually</button>
+    <button class="tab-btn" onclick="switchTab('books')">📚 Manage Books <span id="tabCount" style="opacity:0.6"></span></button>
+  </div>
+
+  <!-- TAB: UPLOAD -->
+  <div id="tab-upload" class="tab-content active">
+    <div class="form-card">
+      <h2>📤 Upload Book File</h2>
+
+      <!-- Upload drop zone -->
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept=".txt,.pdf,.epub,.mobi,.html,.htm,.md,.markdown,.docx,.doc,.rtf,.odt,.fb2,.azw,.azw3,.djvu,.cbz,.cbr">
+        <div class="upload-icon">📂</div>
+        <div class="upload-text">Drag & drop your book here, or click to browse</div>
+        <div class="upload-hint">Max file size: 50 MB</div>
+        <div class="format-badges">
+          <span class="format-badge">TXT</span>
+          <span class="format-badge">PDF</span>
+          <span class="format-badge">EPUB</span>
+          <span class="format-badge">MOBI</span>
+          <span class="format-badge">HTML</span>
+          <span class="format-badge">Markdown</span>
+          <span class="format-badge">DOCX</span>
+          <span class="format-badge">RTF</span>
+          <span class="format-badge">ODT</span>
+          <span class="format-badge">FB2</span>
+          <span class="format-badge">Kindle</span>
+          <span class="format-badge">DjVu</span>
+          <span class="format-badge">CBZ/CBR</span>
+        </div>
+      </div>
+
+      <!-- File preview -->
+      <div class="file-preview" id="filePreview">
+        <div class="file-icon" id="previewIcon">📄</div>
+        <div class="file-details">
+          <div class="file-name" id="previewName"></div>
+          <div class="file-meta" id="previewMeta"></div>
+        </div>
+        <button class="btn-remove-file" onclick="removeFile()" title="Remove file">✕</button>
+      </div>
+
+      <!-- Upload form fields -->
       <div class="form-grid">
         <div class="form-group">
           <label>Title *</label>
-          <input id="title" type="text" placeholder="Book title" required>
+          <input id="upTitle" type="text" placeholder="Book title" required>
         </div>
         <div class="form-group">
           <label>Author *</label>
-          <input id="author" type="text" placeholder="Author name" required>
+          <input id="upAuthor" type="text" placeholder="Author name" required>
         </div>
         <div class="form-group full">
           <label>Description</label>
-          <textarea id="description" placeholder="Short description of the book..."></textarea>
+          <textarea id="upDescription" placeholder="Short description of the book..."></textarea>
         </div>
         <div class="form-group">
           <label>Spine Color</label>
           <div class="color-row">
-            <input id="color" type="color" value="#8B4513">
+            <input id="upColor" type="color" value="#8B4513">
             <div class="color-presets">
-              <div class="color-preset" style="background:#8B4513" data-color="#8B4513" title="Saddle Brown"></div>
-              <div class="color-preset" style="background:#2F4F4F" data-color="#2F4F4F" title="Dark Slate"></div>
-              <div class="color-preset" style="background:#800020" data-color="#800020" title="Burgundy"></div>
-              <div class="color-preset" style="background:#1B4D3E" data-color="#1B4D3E" title="Forest Green"></div>
-              <div class="color-preset" style="background:#1a1a6e" data-color="#1a1a6e" title="Navy"></div>
-              <div class="color-preset" style="background:#4a0e4e" data-color="#4a0e4e" title="Purple"></div>
-              <div class="color-preset" style="background:#b8860b" data-color="#b8860b" title="Gold"></div>
-              <div class="color-preset" style="background:#36454F" data-color="#36454F" title="Charcoal"></div>
+              <div class="color-preset" style="background:#8B4513" data-color="#8B4513"></div>
+              <div class="color-preset" style="background:#2F4F4F" data-color="#2F4F4F"></div>
+              <div class="color-preset" style="background:#800020" data-color="#800020"></div>
+              <div class="color-preset" style="background:#1B4D3E" data-color="#1B4D3E"></div>
+              <div class="color-preset" style="background:#1a1a6e" data-color="#1a1a6e"></div>
+              <div class="color-preset" style="background:#4a0e4e" data-color="#4a0e4e"></div>
+              <div class="color-preset" style="background:#b8860b" data-color="#b8860b"></div>
+              <div class="color-preset" style="background:#36454F" data-color="#36454F"></div>
             </div>
           </div>
         </div>
-        <div class="form-group full">
-          <label>Book Content</label>
-          <textarea id="content" placeholder="Paste or write the book text here..." style="min-height:120px"></textarea>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="upload-progress" id="uploadProgress">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
         </div>
+        <div class="progress-text" id="progressText">Uploading...</div>
       </div>
+
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary" id="submitBtn">💾 Add Book</button>
-        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none" onclick="resetForm()">✕ Cancel</button>
+        <button class="btn btn-primary" id="uploadBtn" onclick="uploadBook()" disabled>📤 Upload Book</button>
       </div>
-    </form>
+    </div>
   </div>
 
-  <!-- BOOK LIST -->
-  <div class="book-list-header">
-    <h2>📚 Your Books (<span id="totalBooks">0</span>)</h2>
+  <!-- TAB: MANUAL -->
+  <div id="tab-manual" class="tab-content">
+    <div class="form-card">
+      <h2 id="formTitle">✏️ Add Book Manually</h2>
+      <form id="bookForm">
+        <input type="hidden" id="editId" value="">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Title *</label>
+            <input id="title" type="text" placeholder="Book title" required>
+          </div>
+          <div class="form-group">
+            <label>Author *</label>
+            <input id="author" type="text" placeholder="Author name" required>
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea id="description" placeholder="Short description of the book..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Spine Color</label>
+            <div class="color-row">
+              <input id="color" type="color" value="#8B4513">
+              <div class="color-presets">
+                <div class="color-preset" style="background:#8B4513" data-color="#8B4513"></div>
+                <div class="color-preset" style="background:#2F4F4F" data-color="#2F4F4F"></div>
+                <div class="color-preset" style="background:#800020" data-color="#800020"></div>
+                <div class="color-preset" style="background:#1B4D3E" data-color="#1B4D3E"></div>
+                <div class="color-preset" style="background:#1a1a6e" data-color="#1a1a6e"></div>
+                <div class="color-preset" style="background:#4a0e4e" data-color="#4a0e4e"></div>
+                <div class="color-preset" style="background:#b8860b" data-color="#b8860b"></div>
+                <div class="color-preset" style="background:#36454F" data-color="#36454F"></div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>Book Content</label>
+            <textarea id="content" placeholder="Paste or write the book text here..." style="min-height:160px"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="submitBtn">💾 Add Book</button>
+          <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none" onclick="resetForm()">✕ Cancel</button>
+        </div>
+      </form>
+    </div>
   </div>
-  <div id="bookList" class="book-list"></div>
+
+  <!-- TAB: BOOK LIST -->
+  <div id="tab-books" class="tab-content">
+    <div class="book-list-header">
+      <h2>📚 Your Books (<span id="totalBooks">0</span>)</h2>
+    </div>
+    <div id="bookList" class="book-list"></div>
+  </div>
 
 </div>
 
 <script>
+/* ---- TAB SWITCHING ---- */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'books') loadBooks();
+}
+
+/* ---- COLOR PRESETS (both forms) ---- */
+document.querySelectorAll('.color-preset').forEach(preset => {
+  preset.addEventListener('click', () => {
+    const color = preset.dataset.color;
+    /* update the closest color input */
+    const row = preset.closest('.color-row');
+    if (row) row.querySelector('input[type="color"]').value = color;
+  });
+});
+
+/* ---- FILE UPLOAD ---- */
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const filePreview = document.getElementById('filePreview');
+const uploadBtn = document.getElementById('uploadBtn');
+const uploadProgress = document.getElementById('uploadProgress');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+
+let selectedFile = null;
+
+/* Drag & drop */
+uploadZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadZone.classList.add('drag-over');
+});
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.classList.remove('drag-over');
+});
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length > 0) {
+    handleFile(e.dataTransfer.files[0]);
+  }
+});
+fileInput.addEventListener('change', e => {
+  if (e.target.files.length > 0) {
+    handleFile(e.target.files[0]);
+  }
+});
+
+const FORMAT_ICONS = {
+  '.txt': '📄', '.pdf': '📕', '.epub': '📗', '.mobi': '📘',
+  '.html': '🌐', '.htm': '🌐', '.md': '📝', '.markdown': '📝',
+  '.docx': '📘', '.doc': '📘', '.rtf': '📄', '.odt': '📄',
+  '.fb2': '📖', '.azw': '📱', '.azw3': '📱', '.djvu': '📑',
+  '.cbz': '💬', '.cbr': '💬'
+};
+
+const FORMAT_LABELS = {
+  '.txt': 'Plain Text', '.pdf': 'PDF', '.epub': 'EPUB',
+  '.mobi': 'MOBI', '.html': 'HTML', '.htm': 'HTML',
+  '.md': 'Markdown', '.markdown': 'Markdown',
+  '.docx': 'Word DOCX', '.doc': 'Word DOC', '.rtf': 'RTF',
+  '.odt': 'OpenDocument', '.fb2': 'FictionBook',
+  '.azw': 'Kindle AZW', '.azw3': 'Kindle AZW3',
+  '.djvu': 'DjVu', '.cbz': 'Comic CBZ', '.cbr': 'Comic CBR'
+};
+
+function handleFile(file) {
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  selectedFile = file;
+
+  document.getElementById('previewIcon').textContent = FORMAT_ICONS[ext] || '📚';
+  document.getElementById('previewName').textContent = file.name;
+  document.getElementById('previewMeta').textContent =
+    `${FORMAT_LABELS[ext] || ext.toUpperCase()} · ${formatSize(file.size)}`;
+
+  filePreview.classList.add('show');
+  uploadBtn.disabled = false;
+
+  /* Auto-fill title from filename */
+  if (!document.getElementById('upTitle').value) {
+    document.getElementById('upTitle').value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+  }
+}
+
+function removeFile() {
+  selectedFile = null;
+  fileInput.value = '';
+  filePreview.classList.remove('show');
+  uploadBtn.disabled = false;
+  uploadProgress.classList.remove('show');
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function uploadBook() {
+  if (!selectedFile) return;
+
+  const title = document.getElementById('upTitle').value.trim();
+  const author = document.getElementById('upAuthor').value.trim();
+
+  if (!title || !author) {
+    showToast('Please fill in title and author', 'error');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('bookFile', selectedFile);
+  formData.append('title', title);
+  formData.append('author', author);
+  formData.append('description', document.getElementById('upDescription').value.trim());
+  formData.append('color', document.getElementById('upColor').value);
+
+  uploadBtn.disabled = true;
+  uploadProgress.classList.add('show');
+  progressFill.style.width = '0%';
+  progressText.textContent = 'Uploading...';
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/books/upload');
+
+  xhr.upload.addEventListener('progress', e => {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 100);
+      progressFill.style.width = pct + '%';
+      progressText.textContent = `Uploading... ${pct}%`;
+    }
+  });
+
+  xhr.addEventListener('load', () => {
+    uploadProgress.classList.remove('show');
+    uploadBtn.disabled = false;
+
+    try {
+      const resp = JSON.parse(xhr.responseText);
+      if (xhr.status === 200 && resp.success) {
+        showToast('Book uploaded successfully!', 'success');
+        removeFile();
+        document.getElementById('upTitle').value = '';
+        document.getElementById('upAuthor').value = '';
+        document.getElementById('upDescription').value = '';
+        document.getElementById('upColor').value = '#8B4513';
+      } else {
+        showToast(resp.error || 'Upload failed', 'error');
+      }
+    } catch (e) {
+      showToast('Upload failed', 'error');
+    }
+  });
+
+  xhr.addEventListener('error', () => {
+    uploadProgress.classList.remove('show');
+    uploadBtn.disabled = false;
+    showToast('Upload failed — check your connection', 'error');
+  });
+
+  xhr.send(formData);
+}
+
+/* ---- MANUAL BOOK FORM ---- */
 const form = document.getElementById('bookForm');
 const formTitle = document.getElementById('formTitle');
 const editIdInput = document.getElementById('editId');
 const submitBtn = document.getElementById('submitBtn');
 const cancelBtn = document.getElementById('cancelBtn');
-const bookList = document.getElementById('bookList');
-const totalBooks = document.getElementById('totalBooks');
 
-/* COLOR PRESETS */
-document.querySelectorAll('.color-preset').forEach(preset => {
-  preset.addEventListener('click', () => {
-    document.getElementById('color').value = preset.dataset.color;
-  });
-});
-
-/* LOAD BOOKS */
-function loadBooks() {
-  fetch('/api/books')
-    .then(r => r.json())
-    .then(books => renderBookList(books));
-}
-
-function renderBookList(books) {
-  totalBooks.textContent = books.length;
-
-  if (books.length === 0) {
-    bookList.innerHTML = `
-      <div class="empty-list">
-        <div class="icon">📭</div>
-        <p>No books yet. Add your first book above!</p>
-      </div>`;
-    return;
-  }
-
-  bookList.innerHTML = books.map(book => `
-    <div class="book-item">
-      <div class="book-color-dot" style="background:${book.color || '#8B4513'}"></div>
-      <div class="book-info">
-        <div class="b-title">${esc(book.title)}</div>
-        <div class="b-author">by ${esc(book.author)}</div>
-        <div class="b-desc">${esc(book.description) || 'No description'}</div>
-      </div>
-      <div class="book-actions">
-        <button class="btn-edit" onclick='editBook(${JSON.stringify(book)})'>✏️ Edit</button>
-        <button class="btn-delete" onclick="deleteBook(${book.id})">🗑️ Delete</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-/* ADD / UPDATE BOOK */
 form.addEventListener('submit', e => {
   e.preventDefault();
 
@@ -464,7 +880,6 @@ form.addEventListener('submit', e => {
   const editId = editIdInput.value;
 
   if (editId) {
-    /* UPDATE */
     fetch(`/api/books/${editId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -472,13 +887,12 @@ form.addEventListener('submit', e => {
     })
     .then(r => r.json())
     .then(() => {
-      showToast('Book updated successfully!', 'success');
+      showToast('Book updated!', 'success');
       resetForm();
       loadBooks();
     })
     .catch(() => showToast('Error updating book', 'error'));
   } else {
-    /* CREATE */
     fetch('/api/books', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -486,7 +900,7 @@ form.addEventListener('submit', e => {
     })
     .then(r => r.json())
     .then(() => {
-      showToast('Book added successfully!', 'success');
+      showToast('Book added!', 'success');
       form.reset();
       document.getElementById('color').value = '#8B4513';
       loadBooks();
@@ -495,8 +909,63 @@ form.addEventListener('submit', e => {
   }
 });
 
-/* EDIT BOOK */
+function resetForm() {
+  editIdInput.value = '';
+  form.reset();
+  document.getElementById('color').value = '#8B4513';
+  formTitle.textContent = '✏️ Add Book Manually';
+  submitBtn.textContent = '💾 Add Book';
+  cancelBtn.style.display = 'none';
+}
+
+/* ---- BOOK LIST ---- */
+const bookList = document.getElementById('bookList');
+const totalBooks = document.getElementById('totalBooks');
+const tabCount = document.getElementById('tabCount');
+
+function loadBooks() {
+  fetch('/api/books')
+    .then(r => r.json())
+    .then(books => renderBookList(books));
+}
+
+function renderBookList(books) {
+  totalBooks.textContent = books.length;
+  tabCount.textContent = `(${books.length})`;
+
+  if (books.length === 0) {
+    bookList.innerHTML = `
+      <div class="empty-list">
+        <div class="icon">📭</div>
+        <p>No books yet. Upload or write your first book!</p>
+      </div>`;
+    return;
+  }
+
+  bookList.innerHTML = books.map(book => `
+    <div class="book-item">
+      <div class="book-color-dot" style="background:${book.color || '#8B4513'}">
+        ${book.formatIcon || '📄'}
+      </div>
+      <div class="book-info">
+        <div class="b-title">${esc(book.title)}</div>
+        <div class="b-author">by ${esc(book.author)}</div>
+        <div class="b-desc">${esc(book.description) || 'No description'}</div>
+        <div class="book-meta-badges">
+          <span class="badge badge-format">${book.formatLabel || 'TXT'}</span>
+          ${book.fileSize ? `<span class="badge badge-size">${typeof book.fileSize === 'number' ? formatSize(book.fileSize) : book.fileSize}</span>` : ''}
+        </div>
+      </div>
+      <div class="book-actions">
+        <button class="btn-edit" onclick='editBook(${JSON.stringify(book)})'>✏️ Edit</button>
+        <button class="btn-delete" onclick="deleteBook(${book.id})">🗑️ Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
 function editBook(book) {
+  switchTab('manual');
   editIdInput.value = book.id;
   document.getElementById('title').value = book.title;
   document.getElementById('author').value = book.author;
@@ -508,11 +977,9 @@ function editBook(book) {
   submitBtn.textContent = '💾 Save Changes';
   cancelBtn.style.display = 'inline-block';
 
-  /* scroll to form */
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* DELETE BOOK */
 function deleteBook(id) {
   if (!confirm('Are you sure you want to delete this book?')) return;
 
@@ -525,17 +992,7 @@ function deleteBook(id) {
     .catch(() => showToast('Error deleting book', 'error'));
 }
 
-/* RESET FORM */
-function resetForm() {
-  editIdInput.value = '';
-  form.reset();
-  document.getElementById('color').value = '#8B4513';
-  formTitle.textContent = '➕ Add New Book';
-  submitBtn.textContent = '💾 Add Book';
-  cancelBtn.style.display = 'none';
-}
-
-/* TOAST */
+/* ---- TOAST ---- */
 function showToast(msg, type) {
   const t = document.createElement('div');
   t.className = `toast toast-${type}`;
@@ -544,14 +1001,14 @@ function showToast(msg, type) {
   setTimeout(() => t.remove(), 3000);
 }
 
-/* ESCAPE HTML */
+/* ---- ESCAPE HTML ---- */
 function esc(str) {
   const d = document.createElement('div');
   d.textContent = str || '';
   return d.innerHTML;
 }
 
-/* INIT */
+/* ---- INIT ---- */
 loadBooks();
 </script>
 

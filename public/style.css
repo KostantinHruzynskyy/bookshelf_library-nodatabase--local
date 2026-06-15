@@ -263,6 +263,24 @@ body {
   max-width: 85px;
 }
 
+.book-format-icon {
+  font-size: 1rem;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.book-format-badge {
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  padding: 1px 5px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
 /* ---- EMPTY LIBRARY ---- */
 .empty-library {
   text-align: center;

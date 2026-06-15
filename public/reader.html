@@ -18,14 +18,15 @@
     .reader-topbar {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 16px 24px;
+      gap: 12px;
+      padding: 14px 20px;
       background: rgba(0,0,0,0.5);
       backdrop-filter: blur(10px);
       position: sticky;
       top: 0;
       z-index: 50;
       border-bottom: 1px solid rgba(139,90,43,0.15);
+      flex-wrap: wrap;
     }
 
     .btn-back {
@@ -43,6 +44,7 @@
       font-family: 'Segoe UI', system-ui, sans-serif;
       cursor: pointer;
       transition: all 0.25s;
+      white-space: nowrap;
     }
 
     .btn-back:hover {
@@ -50,14 +52,49 @@
       color: #f0d0a0;
     }
 
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(76,175,80,0.35);
+      background: rgba(76,175,80,0.12);
+      color: #81c784;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .btn-download:hover {
+      background: rgba(76,175,80,0.25);
+      color: #a5d6a7;
+    }
+
     .reader-topbar .book-title-header {
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #c8956c;
       font-family: 'Segoe UI', system-ui, sans-serif;
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .format-pill {
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(139,90,43,0.2);
+      color: #d4a574;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      white-space: nowrap;
     }
 
     /* ---- CONTENT ---- */
@@ -74,6 +111,13 @@
       line-height: 1.3;
     }
 
+    .reader-content .book-meta-line {
+      color: #a08870;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+    }
+
     .reader-content .divider {
       width: 80px;
       height: 3px;
@@ -88,6 +132,14 @@
       color: #c8baa8;
       white-space: pre-wrap;
       word-wrap: break-word;
+    }
+
+    /* ---- PDF VIEWER ---- */
+    .pdf-viewer {
+      width: 100%;
+      height: calc(100vh - 70px);
+      border: none;
+      display: block;
     }
 
     /* ---- LOADING ---- */
@@ -112,32 +164,67 @@
       to { transform: rotate(360deg); }
     }
 
-    /* ---- ERROR ---- */
+    /* ---- ERROR / UNSUPPORTED ---- */
     .error-msg {
       text-align: center;
       padding: 80px 20px;
-      color: #ef9a9a;
+      color: #c8baa8;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
 
-    .error-msg .icon { font-size: 3rem; margin-bottom: 12px; }
+    .error-msg .icon { font-size: 3.5rem; margin-bottom: 16px; }
+
+    .error-msg h2 {
+      font-size: 1.3rem;
+      color: #f0e6d6;
+      margin-bottom: 10px;
+    }
+
+    .error-msg p {
+      color: #a08870;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .error-msg .btn-download-large {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 12px;
+      border: 1px solid rgba(76,175,80,0.4);
+      background: rgba(76,175,80,0.15);
+      color: #81c784;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.25s;
+    }
+
+    .error-msg .btn-download-large:hover {
+      background: rgba(76,175,80,0.3);
+      color: #a5d6a7;
+    }
 
     /* ---- RESPONSIVE ---- */
     @media (max-width: 600px) {
       .reader-content { padding: 30px 18px 60px; }
       .reader-content h1 { font-size: 1.5rem; }
       .reader-content .book-text { font-size: 1rem; }
+      .reader-topbar { padding: 10px 14px; gap: 8px; }
     }
   </style>
 </head>
 <body>
 
 <div class="reader-topbar">
-  <a href="/" class="btn-back">← Back to Library</a>
+  <a href="/" class="btn-back">← Library</a>
   <span class="book-title-header" id="headerTitle">Loading...</span>
+  <span class="format-pill" id="formatPill"></span>
+  <a class="btn-download" id="downloadBtn" style="display:none" href="#">⬇️ Download</a>
 </div>
 
-<div class="reader-content" id="readerContent">
+<div id="readerBody">
   <div class="loading">
     <div class="spinner"></div>
     <p>Loading book...</p>
@@ -148,37 +235,120 @@
 const params = new URLSearchParams(window.location.search);
 const title = params.get('title') || 'Unknown Book';
 const file = params.get('file');
+const bookId = params.get('id');
 
 document.getElementById('headerTitle').textContent = title;
 
-if (file) {
+/* Show download button if we have a book ID */
+if (bookId) {
+  const dlBtn = document.getElementById('downloadBtn');
+  dlBtn.style.display = 'inline-flex';
+  dlBtn.href = `/api/books/${bookId}/file`;
+}
+
+/* Determine format from file extension */
+const ext = file ? '.' + file.split('.').pop().toLowerCase() : '';
+
+const READABLE_FORMATS = ['.txt', '.md', '.markdown', '.html', '.htm', '.rtf'];
+const PDF_FORMATS = ['.pdf'];
+const BINARY_FORMATS = ['.epub', '.mobi', '.azw', '.azw3', '.djvu', '.docx', '.doc', '.odt', '.fb2', '.cbz', '.cbr'];
+
+if (!file) {
+  showError('❓', 'No book specified', 'Go back to the library and select a book to read.');
+} else if (PDF_FORMATS.includes(ext)) {
+  /* PDF — embed with browser's built-in viewer */
+  showPDF();
+} else if (READABLE_FORMATS.includes(ext)) {
+  /* Text-based — fetch and display */
+  fetchAndDisplay();
+} else if (BINARY_FORMATS.includes(ext)) {
+  /* Binary format — show download prompt */
+  showUnsupported();
+} else {
+  /* Unknown — try to fetch as text, fallback to download */
+  fetchAndDisplay();
+}
+
+/* ---- PDF VIEWER ---- */
+function showPDF() {
+  document.getElementById('readerBody').innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.className = 'pdf-viewer';
+  iframe.src = file;
+  document.getElementById('readerBody').appendChild(iframe);
+
+  /* Update format pill */
+  document.getElementById('formatPill').textContent = '📕 PDF';
+}
+
+/* ---- FETCH & DISPLAY TEXT ---- */
+function fetchAndDisplay() {
   fetch(file)
     .then(r => {
       if (!r.ok) throw new Error('Book not found');
       return r.text();
     })
     .then(text => {
-      document.getElementById('readerContent').innerHTML = `
-        <h1>${esc(title)}</h1>
-        <div class="divider"></div>
-        <div class="book-text">${esc(text)}</div>
+      /* Strip HTML tags if needed */
+      if (ext === '.html' || ext === '.htm') {
+        text = text.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+        text = text.replace(/<[^>]+>/g, '');
+        text = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+        text = text.replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+        text = text.replace(/\n{3,}/g, '\n\n').trim();
+      }
+      if (ext === '.rtf') {
+        text = text.replace(/\\[a-z]+\d*\s?/gi, '').replace(/[{}]/g, '').trim();
+      }
+
+      const formatLabels = {
+        '.txt': '📄 TXT', '.md': '📝 MD', '.markdown': '📝 MD',
+        '.html': '🌐 HTML', '.htm': '🌐 HTML', '.rtf': '📄 RTF'
+      };
+      document.getElementById('formatPill').textContent = formatLabels[ext] || '📄 TEXT';
+
+      document.getElementById('readerBody').innerHTML = `
+        <div class="reader-content">
+          <h1>${esc(title)}</h1>
+          <div class="divider"></div>
+          <div class="book-text">${esc(text)}</div>
+        </div>
       `;
     })
     .catch(() => {
-      document.getElementById('readerContent').innerHTML = `
-        <div class="error-msg">
-          <div class="icon">📖</div>
-          <h2>Could not load book</h2>
-          <p>The book file could not be found. It may have been deleted.</p>
-        </div>
-      `;
+      showError('📖', 'Could not load book', 'The book file could not be found. It may have been deleted.');
     });
-} else {
-  document.getElementById('readerContent').innerHTML = `
+}
+
+/* ---- UNSUPPORTED FORMAT ---- */
+function showUnsupported() {
+  const formatLabels = {
+    '.epub': '📗 EPUB', '.mobi': '📘 MOBI', '.azw': '📱 AZW',
+    '.azw3': '📱 AZW3', '.djvu': '📑 DjVu', '.docx': '📘 DOCX',
+    '.doc': '📘 DOC', '.odt': '📄 ODT', '.fb2': '📖 FB2',
+    '.cbz': '💬 CBZ', '.cbr': '💬 CBR'
+  };
+  document.getElementById('formatPill').textContent = formatLabels[ext] || ext.toUpperCase();
+
+  document.getElementById('readerBody').innerHTML = `
     <div class="error-msg">
-      <div class="icon">❓</div>
-      <h2>No book specified</h2>
-      <p>Go back to the library and select a book to read.</p>
+      <div class="icon">${formatLabels[ext] ? formatLabels[ext].split(' ')[0] : '📦'}</div>
+      <h2>${esc(title)}</h2>
+      <p>This book is in <strong>${formatLabels[ext] || ext.toUpperCase()}</strong> format, which can't be displayed directly in the browser.</p>
+      <p>Download the file to read it with your preferred e-book reader app.</p>
+      ${bookId ? `<a class="btn-download-large" href="/api/books/${bookId}/file">⬇️ Download Book</a>` : ''}
+    </div>
+  `;
+}
+
+/* ---- ERROR ---- */
+function showError(icon, heading, message) {
+  document.getElementById('readerBody').innerHTML = `
+    <div class="error-msg">
+      <div class="icon">${icon}</div>
+      <h2>${esc(heading)}</h2>
+      <p>${esc(message)}</p>
     </div>
   `;
 }
