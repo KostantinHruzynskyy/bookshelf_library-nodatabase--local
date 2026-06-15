@@ -1,3 +1,34 @@
-[]
-
-
+[
+  {
+    "id": 1781519918988,
+    "title": "1984",
+    "author": "George Orwell",
+    "description": "A dystopian novel about totalitarianism",
+    "color": "#2F4F4F",
+    "file": "books/1984.txt"
+  },
+  {
+    "id": 1781520403895,
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "description": "A story of wealth and love in the Jazz Age",
+    "color": "#b8860b",
+    "file": "books/the_great_gatsby.txt"
+  },
+  {
+    "id": 1781520403967,
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "description": "A romantic novel of manners",
+    "color": "#800020",
+    "file": "books/pride_and_prejudice.txt"
+  },
+  {
+    "id": 1781520404034,
+    "title": "Moby Dick",
+    "author": "Herman Melville",
+    "description": "The saga of Captain Ahab and the white whale",
+    "color": "#1a1a6e",
+    "file": "books/moby_dick.txt"
+  }
+]

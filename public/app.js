@@ -78,7 +78,7 @@ function openModal(book) {
   mDesc.textContent = book.description || "No description available.";
 
   readBtn.onclick = () => {
-    window.location.href = `/books/reader.html?title=${encodeURIComponent(book.title)}&file=${encodeURIComponent(book.file)}`;
+    window.location.href = `/reader.html?title=${encodeURIComponent(book.title)}&file=${encodeURIComponent(book.file)}`;
   };
 }
 

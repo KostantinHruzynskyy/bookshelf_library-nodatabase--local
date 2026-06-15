@@ -5,6 +5,7 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
+app.use("/books", express.static("books"));
 
 const BOOKS_FILE = path.join(__dirname, "books.json");
 const BOOKS_DIR = path.join(__dirname, "books");
