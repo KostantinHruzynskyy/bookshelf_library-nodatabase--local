@@ -47,7 +47,8 @@
       transition: all 0.25s;
     }
 
-    .btn-back:hover {
+    .user-info { color: #c8956c; font-size: 0.85rem; font-weight: 600; }
+.btn-back:hover {
       background: rgba(139,90,43,0.3);
       color: #f0d0a0;
     }
@@ -537,11 +538,21 @@
 </head>
 <body>
 
+<div id="loginPrompt" style="display:none; text-align:center; padding:80px 20px;">
+  <div style="max-width:400px; margin:0 auto; background:linear-gradient(160deg,#2a2218,#1e1812); border:1px solid rgba(139,90,43,0.25); border-radius:18px; padding:40px;">
+    <h2 style="color:#f0e6d6; margin-bottom:16px;">⚠️ Login Required</h2>
+    <p style="color:#a08870; margin-bottom:24px;">You must be logged in to access the admin panel and upload books.</p>
+    <a href="/login.html" style="display:inline-block; padding:12px 24px; background:linear-gradient(135deg,#c8956c,#a06830); color:#fff; border-radius:12px; text-decoration:none; font-weight:600; margin-right:8px;">Log In</a>
+    <a href="/register.html" style="display:inline-block; padding:12px 24px; background:rgba(139,90,43,0.15); color:#d4a574; border-radius:12px; text-decoration:none; font-weight:600;">Register</a>
+  </div>
+</div>
+<div id="adminContent">
 <div class="admin-container">
 
   <div class="admin-header">
     <h1>⚙️ Admin Panel</h1>
     <a href="/" class="btn-back">← Back to Library</a>
+        <span id="userInfo" class="user-info" style="display:none;"></span>
   </div>
 
   <!-- TABS -->
@@ -982,14 +993,10 @@ function editBook(book) {
 
 function deleteBook(id) {
   if (!confirm('Are you sure you want to delete this book?')) return;
-
-  fetch(`/api/books/${id}`, { method: 'DELETE' })
-    .then(r => r.json())
-    .then(() => {
-      showToast('Book deleted!', 'success');
-      loadBooks();
-    })
-    .catch(() => showToast('Error deleting book', 'error'));
+  fetch('/api/books/' + id, { method: 'DELETE' })
+    .then(function(r) { if (r.status === 401) { showToast('Login required!', 'error'); return null; } return r.json(); })
+    .then(function(d) { if (d) { showToast('Book deleted!', 'success'); loadBooks(); } })
+    .catch(function() { showToast('Error deleting book', 'error'); });
 }
 
 /* ---- TOAST ---- */
@@ -1008,9 +1015,30 @@ function esc(str) {
   return d.innerHTML;
 }
 
+/* ---- AUTH CHECK ---- */
+function checkAuth() {
+  fetch('/api/auth/me')
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (data && data.ok) {
+        var userEl = document.getElementById('userInfo');
+        if (userEl) { userEl.textContent = 'Logged in as: ' + data.user.username; userEl.style.display = 'inline-block'; }
+      } else {
+        document.getElementById('loginPrompt').style.display = 'block';
+        document.getElementById('adminContent').style.display = 'none';
+      }
+    })
+    .catch(function() {
+      document.getElementById('loginPrompt').style.display = 'block';
+      document.getElementById('adminContent').style.display = 'none';
+    });
+}
+
 /* ---- INIT ---- */
+checkAuth();
 loadBooks();
 </script>
 
+</div>
 </body>
 </html>

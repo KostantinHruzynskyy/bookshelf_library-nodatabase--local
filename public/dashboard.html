@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Bookshelf Library</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>📊 My Dashboard</h1>
+    <a href="/" class="btn-back">← Library</a>
+  </div>
+  <div id="error" class="error"></div>
+  <div id="loading" class="loading">⏳ Loading...</div>
+  <div id="content" style="display:none">
+    <div class="stats">
+      <div class="stat-card"><div class="icon">📚</div><div class="value" id="bookCount">0</div><div class="label">Books</div></div>
+      <div class="stat-card"><div class="icon">📅</div><div class="value" id="joinDate">-</div><div class="label">Member Since</div></div>
+      <div class="stat-card"><div class="icon">👤</div><div class="value" id="role">-</div><div class="label">Role</div></div>
+    </div>
+    <div class="card">
+      <h2>👤 Profile</h2>
+      <div class="profile-grid">
+        <div class="field"><label>Username</label><div class="value" id="username">-</div></div>
+        <div class="field"><label>Email</label><div class="value" id="email">-</div></div>
+        <div class="field"><label>Language</label><div class="value" id="lang">-</div></div>
+        <div class="field"><label>Last Login</label><div class="value" id="lastLogin">-</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📖 My Books</h2>
+      <div id="bookList" class="book-list"></div>
+      <a href="/admin.html" class="btn-upload">+ Upload Book</a>
+    </div>
+  </div>
+</div>
+<script>
+function showError(msg){document.getElementById('error').textContent=msg;document.getElementById('error').style.display='block';document.getElementById('loading').style.display='none'}
+function formatDate(d){if(!d)return'Never';return new Date(d).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}
+function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+async function loadDashboard(){
+  try{
+    var meRes=await fetch('/api/auth/me');
+    if(!meRes.ok){window.location.href='/login.html';return}
+    var me=await meRes.json();
+    var profRes=await fetch('/api/user/profile');
+    var prof=profRes.ok?await profRes.json():null;
+    var booksRes=await fetch('/api/user/books?limit=100');
+    var books=booksRes.ok?await booksRes.json():{books:[]};
+    document.getElementById('bookCount').textContent=prof&&prof.profile?prof.profile.bookCount:0;
+    document.getElementById('joinDate').textContent=formatDate(me.user.created_at);
+    document.getElementById('role').textContent=me.user.role||'User';
+    document.getElementById('username').textContent=me.user.username;
+    document.getElementById('email').textContent=me.user.email;
+    document.getElementById('lang').textContent=(me.user.preferred_language||'en').toUpperCase();
+    document.getElementById('lastLogin').textContent=formatDate(me.user.last_login_at);
+    var list=document.getElementById('bookList');
+    if(books.books.length===0){
+      list.innerHTML='<div class="empty"><div class="icon">📭</div><p>No books yet.</p></div>';
+    }else{
+      list.innerHTML=books.books.map(function(b){
+        return '<div class="book-item"><div class="book-dot" style="background:'+(b.color||'#8B4513')+'">📄</div><div class="book-info"><div class="book-title">'+esc(b.title)+'</div><div class="book-date">'+formatDate(b.created_at)+'</div></div></div>';
+      }).join('');
+    }
+    document.getElementById('loading').style.display='none';
+    document.getElementById('content').style.display='block';
+  }catch(err){console.error(err);showError('Failed to load dashboard');}
+}
+document.addEventListener('DOMContentLoaded',loadDashboard);
+</script>
+</body>
+</html>

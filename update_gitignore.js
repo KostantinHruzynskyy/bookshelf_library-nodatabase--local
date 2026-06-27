@@ -1,4 +1,9 @@
-# Dependencies
+const fs = require('fs');
+const path = require('path');
+
+const gitignorePath = path.join(__dirname, '.gitignore');
+
+const content = `# Dependencies
 node_modules/
 
 # Logs
@@ -49,3 +54,7 @@ temp/
 # Build output
 dist/
 build/
+`;
+
+fs.writeFileSync(gitignorePath, content, 'utf8');
+console.log('.gitignore updated successfully!');

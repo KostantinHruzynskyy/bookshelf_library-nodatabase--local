@@ -11,8 +11,8 @@ function extractText(ext, filePath) {
     if (['.txt','.md','.markdown','.html','.htm','.rtf'].includes(ext)) {
       let text = fs.readFileSync(filePath, 'utf8');
       if (['.html','.htm'].includes(ext)) {
-        text = text.replace(/<style[^>]*>[\s\S]*?</style>/gi, '')
-                   .replace(/<script[^>]*>[\s\S]*?</script>/gi, '')
+        text = text.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                   .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
                    .replace(/<[^>]+>/g, '')
                    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
                    .replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"')

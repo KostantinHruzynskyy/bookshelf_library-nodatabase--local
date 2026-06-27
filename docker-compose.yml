@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # Application
+  app:
+    build: .
+    container_name: bookshelf-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_TYPE=${DB_TYPE:-sqlite}
+      - DB_PATH=/app/data/bookshelf.db
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key}
+      - SESSION_SECRET=${SESSION_SECRET:-session-secret}
+    volumes:
+      - app-data:/app/data
+      - app-uploads:/app/uploads
+      - app-books:/app/books
+    restart: unless-stopped
+    depends_on:
+      - db
+    networks:
+      - bookshelf-network
+
+  # PostgreSQL Database (optional)
+  db:
+    image: postgres:16-alpine
+    container_name: bookshelf-db
+    environment:
+      - POSTGRES_DB=${DB_NAME:-bookshelf}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - bookshelf-network
+    profiles:
+      - postgres
+      - production
+
+  # Redis for caching/sessions (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: bookshelf-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - bookshelf-network
+    profiles:
+      - production
+
+  # Monitoring with Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bookshelf-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - bookshelf-network
+    profiles:
+      - monitoring
+
+  # Grafana for dashboards (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bookshelf-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - bookshelf-network
+    profiles:
+      - monitoring
+
+volumes:
+  app-data:
+  app-uploads:
+  app-books:
+  postgres-data:
+  redis-data:
+  grafana-data:
+
+networks:
+  bookshelf-network:
+    driver: bridge

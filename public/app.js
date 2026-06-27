@@ -119,6 +119,29 @@ searchInput.addEventListener("input", e => {
   renderBooks(filtered);
 });
 
+/* AUTH UI */
+function updateAuthUI() {
+  fetch('/api/auth/me')
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (data && data.ok) {
+        document.getElementById('authLinks').style.display = 'none';
+        document.getElementById('userLinks').style.display = 'inline-flex';
+        document.getElementById('userName').textContent = '👄 ' + data.user.username;
+      } else {
+        document.getElementById('authLinks').style.display = 'inline-flex';
+        document.getElementById('userLinks').style.display = 'none';
+      }
+    })
+    .catch(function() {});
+}
+var logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) logoutBtn.addEventListener('click', function(e) {
+  e.preventDefault();
+  fetch('/api/auth/logout', { method: 'POST' }).then(function() { window.location.reload(); });
+});
+updateAuthUI();
+
 /* UTILITY */
 function escapeHtml(str) {
   const div = document.createElement("div");
