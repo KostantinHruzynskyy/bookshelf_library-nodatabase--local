@@ -327,6 +327,18 @@ app.post("/api/auth/login", login);
 app.post("/api/auth/logout", logout);
 app.get("/api/auth/me", me);
 
+/* ---- EMAIL VERIFICATION ---- */
+const { requestVerification, verifyEmailRoute } = require("./src/services/email-verification");
+app.post("/api/auth/request-verification", authRequired, requestVerification);
+app.get("/api/auth/verify-email", verifyEmailRoute);
+app.post("/api/auth/verify-email", verifyEmailRoute);
+
+/* ---- PASSWORD RESET ---- */
+const { requestReset, confirmPasswordReset, validateResetToken } = require("./src/services/password-reset");
+app.post("/api/auth/request-reset", requestReset);
+app.post("/api/auth/confirm-reset", confirmPasswordReset);
+app.get("/api/auth/validate-reset-token", validateResetToken);
+
 
 /* ---- USER ROUTES ---- */
 app.get('/api/user/profile', (req, res) => {
@@ -351,6 +363,23 @@ app.get('/api/user/books', (req, res) => {
   }
 });
 
+/* ---- PROFILE EDITING ---- */
+const { updateProfileRoute, changePasswordRoute, changeEmailRoute } = require("./src/services/profile-service");
+app.put("/api/user/profile", authRequired, updateProfileRoute);
+app.post("/api/user/change-password", authRequired, changePasswordRoute);
+app.post("/api/user/change-email", authRequired, changeEmailRoute);
+
+/* ---- BOOK RATINGS/REVIEWS ---- */
+const { submitRatingRoute, getBookRatingsRoute, getUserRatingRoute, deleteRatingRoute } = require("./src/services/ratings-service");
+app.post("/api/books/:bookId/ratings", authRequired, submitRatingRoute);
+app.get("/api/books/:bookId/ratings", getBookRatingsRoute);
+app.get("/api/books/:bookId/ratings/me", authRequired, getUserRatingRoute);
+app.delete("/api/books/:bookId/ratings", authRequired, deleteRatingRoute);
+
+/* ---- SEARCH ---- */
+const { searchRoute } = require("./src/services/search-service");
+app.get("/api/search", searchRoute);
+
 /* ---- HEALTH ---- */
 app.get('/api/health', (req, res) => {
   try {
@@ -363,15 +392,13 @@ app.get('/api/health', (req, res) => {
 
 
 /* ---- ADMIN ROUTES ---- */
-app.get('/api/admin/users', authRequired, adminRequired, (req, res) => {
-  try {
-    const db = require('./src/database/connection').getDb();
-    const users = db.prepare('SELECT id, username, email, role, is_active, created_at, last_login_at FROM users ORDER BY created_at DESC').all();
-    res.json({ ok: true, users });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
+const { listUsersRoute, updateUserRoute, deleteUserRoute, statsRoute, listAllBooksRoute, toggleBookActiveRoute } = require("./src/services/admin-service");
+app.get('/api/admin/users', authRequired, adminRequired, listUsersRoute);
+app.put('/api/admin/users/:userId', authRequired, adminRequired, updateUserRoute);
+app.delete('/api/admin/users/:userId', authRequired, adminRequired, deleteUserRoute);
+app.get('/api/admin/stats', authRequired, adminRequired, statsRoute);
+app.get('/api/admin/books', authRequired, adminRequired, listAllBooksRoute);
+app.put('/api/admin/books/:bookId/toggle', authRequired, adminRequired, toggleBookActiveRoute);
 
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");

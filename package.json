@@ -5,7 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node tests/test-all.js",
+    "test:security": "node test_security.js",
+    "test:server": "node test_server.js",
+    "fix:lineendings": "find . -name '*.js' -not -path '*/node_modules/*' -not -path '*/.git/*' -exec sed -i 's/\\r$//' {} +",
+    "lint": "find . -name '*.js' -not -path '*/node_modules/*' -not -path '*/.git/*' -exec node -c {} \\;"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
