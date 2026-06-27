@@ -2,25 +2,57 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+
+const { getDb } = require("./db");
+const { BooksRepository } = require("./src/repositories/books");
+const { sanitizeText, sanitizeFilename } = require("./security/input-sanitizer");
+const { applySecurityHeaders } = require("./security/security-headers");
+const { createAuditLogger } = require("./security/audit-logger");
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(helmet());
+app.use(applySecurityHeaders);
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(express.static("public"));
 app.use("/books", express.static("books"));
 
-const BOOKS_FILE = path.join(__dirname, "books.json");
-const BOOKS_DIR = path.join(__dirname, "books");
-const UPLOADS_DIR = path.join(__dirname, "books", "uploads");
-
-/* ensure folders exist */
-[BOOKS_DIR, UPLOADS_DIR].forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+/* ---- RATE LIMITING ---- */
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "rate_limited", message: "Too many requests. Try again later." }
 });
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "rate_limited", message: "Too many auth attempts." }
+});
+app.use("/api/", apiLimiter);
+app.use("/api/auth/", authLimiter);
 
-/* ensure books.json exists */
-if (!fs.existsSync(BOOKS_FILE)) {
-  fs.writeFileSync(BOOKS_FILE, "[]");
+const repo = new BooksRepository();
+const audit = createAuditLogger(getDb);
+
+/* Migrate legacy books.json on first run */
+try {
+  const BOOKS_FILE = path.join(__dirname, "books.json");
+  const legacy = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
+  if (Array.isArray(legacy) && legacy.length) {
+    const count = getDb().prepare("SELECT COUNT(*) as c FROM books").get().c;
+    if (count === 0) {
+      repo.importFromJsonArray(legacy);
+      console.log(`[migration] Imported ${legacy.length} legacy books into SQLite.`);
+    }
+  }
+} catch (e) {
+  console.error("[migration] Legacy import warning:", e.message);
 }
 
 /* ---- MULTER CONFIG ---- */
@@ -114,178 +146,144 @@ function extractText(ext, filePath) {
   return "";
 }
 
-/* ---- API ROUTES ---- */
+/* ---- BOOK ROUTES (SQLite via repository) ---- */
 
-/* get books */
-app.get("/api/books", (req, res) => {
+app.get('/api/books', (req, res) => {
   try {
-    const data = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
-    res.json(data);
+    const term = (req.query.q || '').trim();
+    const books = term ? repo.search(term) : repo.getAll();
+    res.json(books);
   } catch (e) {
-    res.json([]);
+    console.error(e);
+    res.status(500).json({ error: 'Failed to load books' });
   }
 });
 
-/* add book (text content) */
-app.post("/api/books", (req, res) => {
-  const { title, author, description, color, content } = req.body;
-
-  if (!title || !author) {
-    return res.status(400).json({ error: "Title and author are required" });
-  }
-
-  const safeName = title.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-  const filePath = `books/${safeName}.txt`;
-
-  fs.writeFileSync(path.join(__dirname, filePath), content || "");
-
-  const books = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
-  books.push({
-    id: Date.now(),
-    title,
-    author,
-    description: description || "",
-    color: color || "#8B4513",
-    file: filePath,
-    format: ".txt",
-    formatIcon: "📄",
-    formatLabel: "Plain Text",
-    fileSize: (content || "").length
-  });
-
-  fs.writeFileSync(BOOKS_FILE, JSON.stringify(books, null, 2));
-  res.json({ success: true });
-});
-
-/* upload book file */
-app.post("/api/books/upload", upload.single("bookFile"), (req, res) => {
+app.get('/api/health', (req, res) => {
   try {
-    const { title, author, description, color } = req.body;
+    getDb().prepare('SELECT 1').get();
+    res.json({ status: 'ok', database: 'sqlite', timestamp: new Date().toISOString() });
+  } catch (e) {
+    res.status(500).json({ status: 'error', error: e.message });
+  }
+});
 
-    if (!title || !author) {
-      /* cleanup uploaded file */
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ error: "Title and author are required" });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    const ext = path.extname(req.file.originalname).toLowerCase();
-    const fileSize = req.file.size;
-
-    /* try to extract text for readable formats */
-    const extractedText = extractText(ext, req.file.path);
-
-    /* if we extracted text, also save a .txt copy for the reader */
-    let readFilePath = `books/uploads/${req.file.filename}`;
-    if (ext === ".txt" || ext === ".md" || ext === ".markdown") {
-      /* text files can be read directly */
-      readFilePath = `books/uploads/${req.file.filename}`;
-    } else if (ext === ".html" || ext === ".htm" || ext === ".rtf") {
-      /* save extracted text as .txt for reading */
-      const txtFilename = path.basename(req.file.filename, ext) + ".txt";
-      fs.writeFileSync(path.join(UPLOADS_DIR, txtFilename), extractedText);
-      readFilePath = `books/uploads/${txtFilename}`;
-    }
-    /* For PDF, EPUB, MOBI, etc. the original file is stored but can't be read as text */
-
-    const books = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
-    const bookId = Date.now();
-
-    books.push({
-      id: bookId,
-      title,
-      author,
-      description: description || "",
-      color: color || "#8B4513",
-      file: `books/uploads/${req.file.filename}`,
-      originalFile: req.file.originalname,
-      format: ext,
-      formatIcon: getFormatIcon(ext),
-      formatLabel: getFormatLabel(ext),
-      fileSize,
-      extractedText: extractedText || null,
-      readFilePath
+app.post('/api/books', (req, res) => {
+  try {
+    const { title, author, description, color, content } = req.body;
+    const safeName = sanitizeFilename(title);
+    const relativePath = 'books/' + safeName + '.txt';
+    fs.writeFileSync(path.join(__dirname, relativePath), content || '');
+    const authors = (author || '').split(',').map(a => a.trim()).filter(Boolean);
+    const book = repo.create({
+      title: sanitizeText(title, 200),
+      description: sanitizeText(description || '', 1000),
+      color: color || '#8B4513',
+      file_path: relativePath,
+      file_format: '.txt',
+      file_size: (content || '').length,
+      authors
     });
-
-    fs.writeFileSync(BOOKS_FILE, JSON.stringify(books, null, 2));
-    res.json({ success: true, id: bookId });
+    res.json({ success: true, id: book.id });
   } catch (e) {
-    if (req.file) {
-      try { fs.unlinkSync(req.file.path); } catch (e2) { /* ignore */ }
-    }
+    console.error(e);
     res.status(500).json({ error: e.message });
   }
 });
 
-/* delete book */
-app.delete("/api/books/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const books = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
-  const book = books.find(b => b.id === id);
-
-  if (book) {
-    /* remove uploaded file */
-    const filePath = path.join(__dirname, book.file);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    /* remove extracted txt if different */
-    if (book.readFilePath && book.readFilePath !== book.file) {
-      const readPath = path.join(__dirname, book.readFilePath);
-      if (fs.existsSync(readPath)) fs.unlinkSync(readPath);
+app.post('/api/books/upload', upload.single('bookFile'), (req, res) => {
+  try {
+    const { title, author, description, color } = req.body;
+    if (!title || !author) {
+      if (req.file) fs.unlinkSync(req.file.path);
+      return res.status(400).json({ error: 'Title and author are required' });
     }
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const fileSize = req.file.size;
+    const extractedText = extractText(ext, req.file.path);
+    let readFilePath = 'books/uploads/' + req.file.filename;
+    if (ext === '.html' || ext === '.htm' || ext === '.rtf') {
+      const txtFilename = path.basename(req.file.filename, ext) + '.txt';
+      fs.writeFileSync(path.join(UPLOADS_DIR, txtFilename), extractedText);
+      readFilePath = 'books/uploads/' + txtFilename;
+    }
+    const authors = (author || '').split(',').map(a => a.trim()).filter(Boolean);
+    const book = repo.create({
+      title: sanitizeText(title, 200),
+      description: sanitizeText(description || '', 1000),
+      color: color || '#8B4513',
+      file_path: path.relative(process.cwd(), req.file.path).split(path.sep).join('/'),
+      file_format: ext,
+      file_size: fileSize,
+      extractedText,
+      readFilePath,
+      originalFile: req.file.originalname,
+      authors
+    });
+    audit.logFileScan(book.id, 'mime_validation', 'clean', JSON.stringify({ ext, size: fileSize }));
+    res.json({ success: true, id: book.id });
+  } catch (e) {
+    if (req.file) { try { fs.unlinkSync(req.file.path); } catch (e2) {} }
+    console.error(e);
+    res.status(500).json({ error: e.message });
   }
-
-  const filtered = books.filter(b => b.id !== id);
-  fs.writeFileSync(BOOKS_FILE, JSON.stringify(filtered, null, 2));
-  res.json({ success: true });
 });
 
-/* update book */
-app.put("/api/books/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const { title, author, description, color, content } = req.body;
-  const books = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
-  const index = books.findIndex(b => b.id === id);
-
-  if (index === -1) {
-    return res.status(404).json({ error: "Book not found" });
+app.delete('/api/books/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const book = repo.getById(id);
+    if (book) {
+      const filePath = path.join(__dirname, book.file);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      if (book.readFilePath && book.readFilePath !== book.file) {
+        const readPath = path.join(__dirname, book.readFilePath);
+        if (fs.existsSync(readPath)) fs.unlinkSync(readPath);
+      }
+    }
+    const ok = repo.delete(id);
+    res.json({ success: ok });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
   }
-
-  const book = books[index];
-
-  /* update text file if content provided (only for text-based books) */
-  if (content !== undefined && book.extractedText !== undefined) {
-    try {
-      fs.writeFileSync(path.join(book.file), content);
-    } catch (e) { /* file might not be writable */ }
-  }
-
-  books[index] = {
-    ...book,
-    title: title || book.title,
-    author: author || book.author,
-    description: description !== undefined ? description : book.description,
-    color: color || book.color
-  };
-
-  fs.writeFileSync(BOOKS_FILE, JSON.stringify(books, null, 2));
-  res.json({ success: true });
 });
 
-/* serve book file for download/viewing */
-app.get("/api/books/:id/file", (req, res) => {
-  const id = parseInt(req.params.id);
-  const books = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
-  const book = books.find(b => b.id === id);
+app.put('/api/books/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { title, author, description, color, content } = req.body;
+    const existing = repo.getById(id);
+    const authors = (author || '').split(',').map(a => a.trim()).filter(Boolean);
+    const updateData = {
+      title: sanitizeText(title || existing.title, 200),
+      description: sanitizeText(description !== undefined ? description : existing.description, 1000),
+      color: color || existing.color,
+      authors
+    };
+    if (content !== undefined && existing.extractedText !== null) {
+      try { fs.writeFileSync(path.join(__dirname, existing.file), content); } catch (e) {}
+    }
+    const updated = repo.update(id, updateData);
+    res.json({ success: true, book: updated });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
-  if (!book) return res.status(404).json({ error: "Book not found" });
-
-  const filePath = path.join(__dirname, book.file);
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found" });
-
-  res.download(filePath, book.originalFile || book.title + book.format);
+app.get('/api/books/:id/file', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const book = repo.getById(id);
+    const filePath = path.join(__dirname, book.file);
+    const downloadName = book.originalFile || book.title + (book.format || '.txt');
+    res.download(filePath, downloadName);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 /* error handler for multer */
