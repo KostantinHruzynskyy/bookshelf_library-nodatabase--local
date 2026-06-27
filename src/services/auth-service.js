@@ -1,9 +1,9 @@
 'use strict';
 
 const bcrypt = require('bcryptjs');
-const { getDb } = require('../db');
-const { validateEmailFormat, isDomainAllowed } = require('./email-validator');
-const { sanitizeText } = require('./input-sanitizer');
+const { getDb } = require('../database/connection');
+const { validateEmailFormat, isDomainAllowed } = require('../validators/email-validator');
+const { sanitizeText } = require('../middleware/input-sanitizer');
 
 // Helper to generate session ID
 function generateSessionId() {

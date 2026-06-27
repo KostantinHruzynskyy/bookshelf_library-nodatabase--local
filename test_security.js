@@ -26,7 +26,7 @@ function request(path, options = {}) {
 }
 
 async function test() {
-  console.log('🔒 Testing server with enhanced security...\n');
+  console.log('🔒 Testing security enhancements...\n');
 
   // Test 1: Health endpoint
   console.log('1. Health Check');
@@ -47,6 +47,7 @@ async function test() {
     console.log('   X-Frame-Options:', headers['x-frame-options'] || 'MISSING');
     console.log('   X-Content-Type-Options:', headers['x-content-type-options'] || 'MISSING');
     console.log('   X-XSS-Protection:', headers['x-xss-protection'] || 'MISSING');
+    console.log('   Referrer-Policy:', headers['referrer-policy'] || 'MISSING');
     const hasSecurityHeaders = headers['x-frame-options'] && headers['x-content-type-options'];
     console.log('   Result:', hasSecurityHeaders ? '✅ OK' : '❌ FAIL');
   } catch (e) {
@@ -93,8 +94,24 @@ async function test() {
     console.log('   ❌ Error:', e.message);
   }
 
-  // Test 6: Invalid login
-  console.log('\n6. Invalid Login Attempt');
+  // Test 6: Rate limiting (quick requests)
+  console.log('\n6. Rate Limiting');
+  try {
+    const promises = [];
+    for (let i = 0; i < 5; i++) {
+      promises.push(request('/api/health'));
+    }
+    const results = await Promise.all(promises);
+    const allOk = results.every(r => r.status === 200);
+    console.log('   Sent 5 rapid requests');
+    console.log('   All successful:', allOk);
+    console.log('   Result:', allOk ? '✅ OK (within limits)' : '⚠️ Rate limited');
+  } catch (e) {
+    console.log('   ❌ Error:', e.message);
+  }
+
+  // Test 7: Invalid login
+  console.log('\n7. Invalid Login Attempt');
   try {
     const invalid = await request('/api/auth/login', {
       method: 'POST',

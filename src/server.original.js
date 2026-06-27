@@ -2,11 +2,8 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
-const { applySecurity } = require('./src/middleware/apply-security');
-const { authRequired, adminRequired } = require('./src/middleware/auth-middleware');
 
 const app = express();
-applySecurity(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -313,7 +310,7 @@ app.use((req, res, next) => {
   }
   if (!sid) return next();
   try {
-    const db = require("./src/database/connection").getDb();
+    const db = require("./db").getDb();
     const session = db.prepare("SELECT s.id as sessionId, s.user_id, s.ip_address, s.user_agent, s.created_at as session_created, s.expires_at, s.is_active as session_active, u.id, u.username, u.email, u.role, u.preferred_language, u.is_active as user_active, u.created_at, u.last_login_at, u.failed_login_attempts, u.locked_until FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.is_active = 1").get(sid);
     if (session) req.user = session;
   } catch (e) { /* ignore */ }
@@ -321,7 +318,7 @@ app.use((req, res, next) => {
 });
 
 /* ---- AUTH ROUTES ---- */
-const { login, register, logout, me, getUserProfile, getUserBooks } = require("./src/services/auth-service");
+const { login, register, logout, me, getUserProfile, getUserBooks } = require("./security/register-login");
 app.post("/api/auth/register", register);
 app.post("/api/auth/login", login);
 app.post("/api/auth/logout", logout);
@@ -354,22 +351,10 @@ app.get('/api/user/books', (req, res) => {
 /* ---- HEALTH ---- */
 app.get('/api/health', (req, res) => {
   try {
-    require("./src/database/connection").getDb().prepare("SELECT 1").get();
+    require("./db").getDb().prepare("SELECT 1").get();
     res.json({ status: 'ok' });
   } catch (e) {
     res.status(503).json({ status: 'error' });
-  }
-});
-
-
-/* ---- ADMIN ROUTES ---- */
-app.get('/api/admin/users', authRequired, adminRequired, (req, res) => {
-  try {
-    const db = require('./src/database/connection').getDb();
-    const users = db.prepare('SELECT id, username, email, role, is_active, created_at, last_login_at FROM users ORDER BY created_at DESC').all();
-    res.json({ ok: true, users });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
   }
 });
 
