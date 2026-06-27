@@ -11,3 +11,6 @@
 - [ ] Aggiungere sistema di raccomandazioni
 - [ ] Aggiungere footer con crediti "Skyy" e disclaimer legale
 - [ ] Testare il sistema completo
+- [ ] Controllo generale delle funzionalita e completamento
+- [ ] Aggiungere film epoca no copyright -->   ???
+- [ ] Free For All

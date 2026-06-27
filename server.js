@@ -299,6 +299,31 @@ app.use((err, req, res, next) => {
   next();
 });
 
+
+/* ---- SESSION LOADER ---- */
+app.use((req, res, next) => {
+  const cookies = (req.headers.cookie || "").split(";");
+  let sid = null;
+  for (const c of cookies) {
+    const [k, ...v] = c.trim().split("=");
+    if (k === "bookshelf_session") { sid = v.join("="); break; }
+  }
+  if (!sid) return next();
+  try {
+    const db = require("./db").getDb();
+    const session = db.prepare("SELECT s.*, u.username, u.email, u.role FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.is_active = 1").get(sid);
+    if (session) req.user = session;
+  } catch (e) { /* ignore */ }
+  next();
+});
+
+/* ---- AUTH ROUTES ---- */
+const { login, register, logout, me } = require("./security/register-login");
+app.post("/api/auth/register", register);
+app.post("/api/auth/login", login);
+app.post("/api/auth/logout", logout);
+app.get("/api/auth/me", me);
+
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });
