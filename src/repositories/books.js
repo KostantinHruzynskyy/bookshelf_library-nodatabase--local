@@ -3,8 +3,8 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
-const { getDb } = require('../db');
-const { sanitizeText, sanitizeFilename, getExtension, assertSafeExtension, ALLOWED_EXT } = require('../security/input-sanitizer');
+const { getDb } = require('../database/connection');
+const { sanitizeText, sanitizeFilename, getExtension, assertSafeExtension, ALLOWED_EXT } = require('../middleware/input-sanitizer');
 
 function extractText(ext, filePath) {
   try {
@@ -84,8 +84,39 @@ class BooksRepository {
 
   search(term) {
     const like = `%${term}%`;
-    const stmt = this.db.prepare("SELECT * FROM books WHERE (title LIKE ? OR author LIKE ? OR description LIKE ?) AND is_active = 1 ORDER BY created_at DESC");
+    const stmt = this.db.prepare("SELECT DISTINCT b.* FROM books b LEFT JOIN book_authors ba ON b.id = ba.book_id WHERE (b.title LIKE ? OR ba.author_name LIKE ? OR b.description LIKE ?) AND b.is_active = 1 ORDER BY b.created_at DESC");
     return stmt.all(like, like, like).map(row => this.mapRow(row));
+  }
+
+  getByTag(tag) {
+    const stmt = this.db.prepare(`
+      SELECT b.* FROM books b
+      JOIN book_tags_new bt ON b.id = bt.book_id
+      JOIN tags t ON bt.tag_id = t.id
+      WHERE t.name = ? AND b.is_active = 1
+      ORDER BY b.created_at DESC
+    `);
+    return stmt.all(tag).map(row => this.mapRow(row));
+  }
+
+  getByCategory(category) {
+    const stmt = this.db.prepare(`
+      SELECT b.* FROM books b
+      JOIN categories c ON b.category_id = c.id
+      WHERE c.name_key = ? AND b.is_active = 1
+      ORDER BY b.created_at DESC
+    `);
+    return stmt.all(category).map(row => this.mapRow(row));
+  }
+
+  getByFormat(format) {
+    const stmt = this.db.prepare('SELECT * FROM books WHERE file_format = ? AND is_active = 1 ORDER BY created_at DESC');
+    return stmt.all(format).map(row => this.mapRow(row));
+  }
+
+  incrementDownloads(id) {
+    const stmt = this.db.prepare('UPDATE books SET downloads = downloads + 1 WHERE id = ?');
+    stmt.run(id);
   }
 
   create(data) {
