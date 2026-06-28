@@ -26,49 +26,44 @@
 
 <main>
 <div class="page-header"><h1>📚 All Books</h1><p>Discover our digital library</p></div>
-<div class="search-container"><input id="searchInput" type="text" placeholder="Search books..."><button id="searchBtn">🔍 Search</button></div>
+
+<div class="search-section">
+  <div class="search-container">
+    <input id="searchInput" type="text" placeholder="Search by title, author, or description...">
+    <button id="searchBtn">🔍 Search</button>
+  </div>
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter=".pdf">PDF</button>
+    <button class="filter-btn" data-filter=".epub">EPUB</button>
+    <button class="filter-btn" data-filter=".txt">Text</button>
+    <button class="filter-btn" data-filter=".mobi">MOBI</button>
+  </div>
+</div>
+
 <div id="booksGrid" class="books-grid"></div>
+<div id="emptyState" class="empty-state" style="display:none">
+  <div class="icon">📚</div>
+  <h2>No books found</h2>
+  <p>Try adjusting your search or filters</p>
+</div>
 </main>
 
 <footer class="footer">
 <div class="footer-content">
 <div class="footer-brand">📚 Bookshelf Library</div>
+<div class="footer-links">
+<a href="/">Home</a>
+<a href="/books.html">Books</a>
+<a href="/bookmarks.html">Bookmarks</a>
+<a href="/wishlist.html">Wishlist</a>
+<a href="/tags.html">Tags</a>
+<a href="/analytics.html">Analytics</a>
+</div>
 <div class="footer-copyright">© 2026 Bookshelf Library. All rights reserved. (Skyy)</div>
 </div>
 </footer>
 
-<script>
-// Load books directly
-fetch('/api/books')
-  .then(function(r) { return r.json(); })
-  .then(function(books) {
-    var grid = document.getElementById('booksGrid');
-    if (!books || books.length === 0) {
-      grid.innerHTML = '<div class="empty-state"><div class="icon">📚</div><h2>No books yet</h2></div>';
-      return;
-    }
-    var html = '';
-    for (var i = 0; i < books.length; i++) {
-      var b = books[i];
-      html += '<div class="book-card">';
-      html += '<div class="book-cover" style="background:' + (b.color || '#5d4037') + '">';
-      html += '<span class="format-icon">' + (b.formatIcon || '📚') + '</span>';
-      html += '<span class="format-badge">' + (b.formatLabel || b.format || 'Book') + '</span>';
-      html += '</div>';
-      html += '<div class="book-info">';
-      html += '<h3>' + b.title + '</h3>';
-      html += '<p class="author">' + (b.author || 'Unknown') + '</p>';
-      html += '</div>';
-      html += '<div class="book-actions">';
-      html += '<button class="btn-read" onclick="window.location.href=\'/reader.html?id=' + b.id + '\'">📖 Read</button>';
-      html += '<button class="btn-download" onclick="window.location.href=\'/api/books/' + b.id + '/file\'">⬇️ Download</button>';
-      html += '</div>';
-      html += '</div>';
-    }
-    grid.innerHTML = html;
-  })
-  .catch(function(e) { console.error('Error:', e); });
-</script>
-
+<script src="/js/app.js?v=3"></script>
 </body>
 </html>

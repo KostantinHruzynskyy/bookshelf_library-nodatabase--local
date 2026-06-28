@@ -521,9 +521,23 @@ app.get("/api/admin/comments/flagged", authRequired, adminRequired, flaggedComme
 app.put("/api/comments/:id/unflag", authRequired, adminRequired, unflagComment);
 
 /* ---- ANALYTICS ---- */
-const { getAdminAnalytics, getPublicStats } = require("./src/services/analytics-service");
+const { getAdminAnalytics } = require("./src/services/analytics-service");
 app.get("/api/admin/analytics", authRequired, adminRequired, getAdminAnalytics);
-app.get("/api/stats", getPublicStats);
+
+// Public stats - counts from JSON file for books
+app.get("/api/stats", (req, res) => {
+  try {
+    const { getDb } = require("./src/database/connection");
+    const db = getDb();
+    const books = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
+    const totalUsers = db.prepare('SELECT COUNT(*) as c FROM users').get().c || 0;
+    const totalBooks = books.length;
+    const totalDownloads = books.reduce((sum, b) => sum + (b.downloads || 0), 0);
+    res.json({ ok: true, stats: { totalBooks, totalUsers, totalDownloads } });
+  } catch (e) {
+    res.status(500).json({ error: "failed", message: e.message });
+  }
+});
 
 /* ---- READING PROGRESS ---- */
 const { updateRoute: updateProgress, getRoute: getProgress, listRoute: listProgress, deleteRoute: deleteProgress } = require("./src/services/reading-progress-service");

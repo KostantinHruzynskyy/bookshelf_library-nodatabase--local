@@ -8,10 +8,11 @@ async function loadStats() {
   try {
     const res = await fetch("/api/stats");
     if (!res.ok) throw new Error("Failed");
-    const stats = await res.json();
-    document.getElementById("statBooks").textContent = stats.books || 0;
-    document.getElementById("statUsers").textContent = stats.users || 0;
-    document.getElementById("statDownloads").textContent = stats.downloads || 0;
+    const data = await res.json();
+    const stats = data.stats || {};
+    document.getElementById("statBooks").textContent = stats.totalBooks || 0;
+    document.getElementById("statUsers").textContent = stats.totalUsers || 0;
+    document.getElementById("statDownloads").textContent = stats.totalDownloads || 0;
     document.getElementById("statLoans").textContent = stats.activeLoans || 0;
   } catch (e) {
     console.error("Error loading stats:", e);
