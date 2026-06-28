@@ -441,6 +441,153 @@ app.get("/forgot-password.html", (req, res) => servePage(req, res, "forgot-passw
 app.get("/reset-password", (req, res) => servePage(req, res, "reset-password"));
 app.get("/reset-password.html", (req, res) => servePage(req, res, "reset-password"));
 
+/* ---- NOTIFICATIONS ---- */
+const { createRoute: createNotif, listRoute: listNotif, markReadRoute: markReadNotif, markAllReadRoute: markAllReadNotif, deleteRoute: deleteNotif, clearRoute: clearNotif } = require("./src/services/notifications-service");
+app.post("/api/notifications", authRequired, createNotif);
+app.get("/api/notifications", authRequired, listNotif);
+app.put("/api/notifications/:id/read", authRequired, markReadNotif);
+app.put("/api/notifications/read-all", authRequired, markAllReadNotif);
+app.delete("/api/notifications/:id", authRequired, deleteNotif);
+app.delete("/api/notifications", authRequired, clearNotif);
+
+/* ---- BOOKMARKS ---- */
+const { addRoute: addBookmark, removeRoute: removeBookmark, listRoute: listBookmarks, checkRoute: checkBookmark } = require("./src/services/bookmarks-service");
+app.post("/api/books/:bookId/bookmark", authRequired, addBookmark);
+app.delete("/api/books/:bookId/bookmark", authRequired, removeBookmark);
+app.get("/api/bookmarks", authRequired, listBookmarks);
+app.get("/api/books/:bookId/bookmark", authRequired, checkBookmark);
+
+/* ---- WISHLIST ---- */
+const { addRoute: addWish, removeRoute: removeWish, listRoute: listWish, checkRoute: checkWish } = require("./src/services/wishlist-service");
+app.post("/api/books/:bookId/wishlist", authRequired, addWish);
+app.delete("/api/books/:bookId/wishlist", authRequired, removeWish);
+app.get("/api/wishlist", authRequired, listWish);
+app.get("/api/books/:bookId/wishlist", authRequired, checkWish);
+
+/* ---- TAGS ---- */
+const { createTagRoute, listTagsRoute, deleteTagRoute, addTagToBookRoute, removeTagFromBookRoute, getBookTagsRoute, getBooksByTagRoute } = require("./src/services/tags-service");
+app.post("/api/tags", authRequired, createTagRoute);
+app.get("/api/tags", listTagsRoute);
+app.delete("/api/tags/:tagId", authRequired, deleteTagRoute);
+app.post("/api/books/:bookId/tags", authRequired, addTagToBookRoute);
+app.delete("/api/books/:bookId/tags/:tagId", authRequired, removeTagFromBookRoute);
+app.get("/api/books/:bookId/tags", getBookTagsRoute);
+app.get("/api/tags/:tagId/books", getBooksByTagRoute);
+
+/* ---- COMMENTS ---- */
+const { addRoute: addComment, editRoute: editComment, deleteRoute: deleteComment, listRoute: listComments, flagRoute: flagComment, flaggedListRoute: flaggedComments, unflagRoute: unflagComment } = require("./src/services/comments-service");
+app.post("/api/books/:bookId/comments", authRequired, addComment);
+app.put("/api/comments/:id", authRequired, editComment);
+app.delete("/api/comments/:id", authRequired, deleteComment);
+app.get("/api/books/:bookId/comments", listComments);
+app.put("/api/comments/:id/flag", authRequired, flagComment);
+app.get("/api/admin/comments/flagged", authRequired, adminRequired, flaggedComments);
+app.put("/api/comments/:id/unflag", authRequired, adminRequired, unflagComment);
+
+/* ---- ANALYTICS ---- */
+const { getAdminAnalytics, getPublicStats } = require("./src/services/analytics-service");
+app.get("/api/admin/analytics", authRequired, adminRequired, getAdminAnalytics);
+app.get("/api/stats", getPublicStats);
+
+/* ---- READING PROGRESS ---- */
+const { updateRoute: updateProgress, getRoute: getProgress, listRoute: listProgress, deleteRoute: deleteProgress } = require("./src/services/reading-progress-service");
+app.post("/api/books/:bookId/progress", authRequired, updateProgress);
+app.get("/api/books/:bookId/progress", authRequired, getProgress);
+app.get("/api/reading-progress", authRequired, listProgress);
+app.delete("/api/books/:bookId/progress", authRequired, deleteProgress);
+
+/* ---- NEW PAGES ---- */
+app.get("/notifications", (req, res) => servePage(req, res, "notifications"));
+app.get("/notifications.html", (req, res) => servePage(req, res, "notifications"));
+app.get("/bookmarks", (req, res) => servePage(req, res, "bookmarks"));
+app.get("/bookmarks.html", (req, res) => servePage(req, res, "bookmarks"));
+app.get("/wishlist", (req, res) => servePage(req, res, "wishlist"));
+app.get("/wishlist.html", (req, res) => servePage(req, res, "wishlist"));
+app.get("/analytics", (req, res) => servePage(req, res, "analytics"));
+app.get("/analytics.html", (req, res) => servePage(req, res, "analytics"));
+app.get("/tags", (req, res) => servePage(req, res, "tags"));
+app.get("/tags.html", (req, res) => servePage(req, res, "tags"));
+
+
+/* ---- AVATAR ROUTES ---- */
+const { uploadAvatar, processAvatar, cropAvatar, deleteAvatar, getUserAvatar } = require("./src/services/avatar-service");
+app.post("/api/user/avatar", authRequired, uploadAvatar, async (req, res) => {
+  try {
+    const result = await processAvatar(req.user.id, req.file);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'avatar_upload_failed', message: error.message });
+  }
+});
+app.post("/api/user/avatar/crop", authRequired, uploadAvatar, async (req, res) => {
+  try {
+    const { x, y, width, height } = JSON.parse(req.body.cropData || '{}');
+    const result = await cropAvatar(req.user.id, req.file, { x, y, width, height });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'avatar_crop_failed', message: error.message });
+  }
+});
+app.delete("/api/user/avatar", authRequired, async (req, res) => {
+  try {
+    const result = await deleteAvatar(req.user.id);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'avatar_delete_failed', message: error.message });
+  }
+});
+app.get("/api/user/:userId/avatar", async (req, res) => {
+  try {
+    const avatar = getUserAvatar(req.params.userId);
+    res.json(avatar || { avatarUrl: null });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/* ---- LOANS ROUTES ---- */
+const { createLoan, returnBook, renewLoan, listUserLoans, getLoanDetails, getOverdueLoans, updateOverdueStatus } = require("./src/services/loans-service");
+app.post("/api/books/:bookId/loan", authRequired, createLoan);
+app.post("/api/loans/:loanId/return", authRequired, returnBook);
+app.post("/api/loans/:loanId/renew", authRequired, renewLoan);
+app.get("/api/loans", authRequired, listUserLoans);
+app.get("/api/loans/:loanId", authRequired, getLoanDetails);
+app.get("/api/admin/loans/overdue", authRequired, adminRequired, getOverdueLoans);
+
+/* ---- ENHANCED HEALTH CHECK ---- */
+const { healthCheck } = require("./scripts/health.js");
+app.get("/api/health/detailed", async (req, res) => {
+  try {
+    const health = await healthCheck();
+    const statusCode = health.status === 'healthy' ? 200 : 503;
+    res.status(statusCode).json(health);
+  } catch (error) {
+    res.status(503).json({ status: 'error', message: error.message });
+  }
+});
+
+/* ---- LOGGING MIDDLEWARE ---- */
+const { logRequest, logger } = require("./src/config/logger");
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    logRequest(req, res, Date.now() - start);
+  });
+  next();
+});
+
+// Aggiorna status prestiti in ritardo ogni ora
+setInterval(async () => {
+  try {
+    await updateOverdueStatus();
+  } catch (e) {
+    logger.error('Failed to update overdue status', { error: e.message });
+  }
+}, 3600000);
+
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
+  logger.info('Server started', { port: 3000, env: process.env.NODE_ENV || 'development' });
+  // Aggiorna prestiti in ritardo all'avvio
+  updateOverdueStatus().catch(() => {});
 });
