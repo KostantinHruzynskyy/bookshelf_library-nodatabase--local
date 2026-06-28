@@ -1,113 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📚 Bookshelf Library</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home - Bookshelf Library</title>
+<link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
-  <a href="/" class="navbar-brand">
-    <span class="icon">📚</span>
-    Bookshelf
-  </a>
-  <ul class="navbar-nav">
-    <li><a href="/" class="active">🏠 Home</a></li>
-    <li><a href="/books.html">📖 Books</a></li>
-    <li><a href="/bookmarks.html">🔖 Bookmarks</a></li>
-    <li><a href="/wishlist.html">⭐ Wishlist</a></li>
-    <li><a href="/tags.html">🏷️ Tags</a></li>
-    <li><a href="/analytics.html">📊 Analytics</a></li>
-  </ul>
-  <div class="navbar-right">
-    <span id="authLinks">
-      <a href="/login.html" class="btn btn-login">Login</a>
-      <a href="/register.html" class="btn btn-register">Register</a>
-    </span>
-    <span id="userLinks" class="user-menu" style="display:none;">
-      <a href="/profile.html" id="userName" class="user-name"></a>
-      <a href="/notifications.html" class="btn">🔔</a>
-      <button id="logoutBtn" class="btn btn-logout">Logout</button>
-    </span>
-  </div>
+<a href="/" class="navbar-brand"><span class="icon">📚</span> Bookshelf</a>
+<ul class="navbar-nav">
+<li><a href="/" class="active">🏠 Home</a></li>
+<li><a href="/books.html">📖 Books</a></li>
+<li><a href="/bookmarks.html">🔖 Bookmarks</a></li>
+<li><a href="/wishlist.html">⭐ Wishlist</a></li>
+<li><a href="/tags.html">🏷️ Tags</a></li>
+<li><a href="/analytics.html">📊 Analytics</a></li>
+</ul>
+<div class="navbar-right">
+<span id="authLinks"><a href="/login.html" class="btn btn-login">Login</a> <a href="/register.html" class="btn btn-register">Register</a></span>
+<span id="userLinks" class="user-menu" style="display:none"><a href="/profile.html" id="userName" class="user-name"></a> <button id="logoutBtn" class="btn btn-logout">Logout</button></span>
+</div>
 </nav>
 
-<!-- MAIN CONTENT -->
 <main>
-  <!-- Page Header -->
-  <div class="page-header">
-    <h1>📚 All Books</h1>
-    <p>Discover and explore our digital library collection</p>
-  </div>
-
-  <!-- Search -->
-  <div class="search-container">
-    <input id="searchInput" type="text" placeholder="Search by title, author, or description...">
-    <button id="searchBtn">🔍 Search</button>
-  </div>
-
-  <!-- Filters -->
-  <div class="filters">
-    <button class="filter-btn active" data-filter="all">All</button>
-    <button class="filter-btn" data-filter=".pdf">PDF</button>
-    <button class="filter-btn" data-filter=".epub">EPUB</button>
-    <button class="filter-btn" data-filter=".txt">Text</button>
-    <button class="filter-btn" data-filter=".mobi">MOBI</button>
-  </div>
-
-  <!-- Books Grid -->
-  <div id="booksGrid" class="books-grid"></div>
-
-  <!-- Empty State -->
-  <div id="emptyState" class="empty-state" style="display:none;">
-    <div class="icon">📚</div>
-    <h2>No books found</h2>
-    <p>Start by adding your first book to the library!</p>
-    <a href="/admin.html" class="btn">Add Book</a>
-  </div>
+<div class="page-header"><h1>📚 All Books</h1><p>Discover our digital library</p></div>
+<div class="search-container"><input id="searchInput" type="text" placeholder="Search books..."><button id="searchBtn">🔍 Search</button></div>
+<div id="booksGrid" class="books-grid"></div>
 </main>
 
-<!-- BOOK DETAIL MODAL -->
-<div id="bookModal" class="modal">
-  <div class="modal-card">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <h2 id="modalTitle"></h2>
-    <p id="modalAuthor" class="modal-author"></p>
-    <p id="modalDesc" class="modal-desc"></p>
-    <div class="modal-meta">
-      <span id="modalFormat" class="meta-item"></span>
-      <span id="modalSize" class="meta-item"></span>
-      <span id="modalDownloads" class="meta-item"></span>
-      <span id="modalDate" class="meta-item"></span>
-    </div>
-    <div class="modal-actions">
-      <a id="modalRead" href="#" class="btn btn-primary">📖 Read</a>
-      <a id="modalDownload" href="#" class="btn btn-secondary">⬇️ Download</a>
-      <button id="modalBookmark" class="btn btn-secondary">🔖 Bookmark</button>
-    </div>
-  </div>
-</div>
-
-<!-- FOOTER -->
 <footer class="footer">
-  <div class="footer-content">
-    <div class="footer-brand">📚 Bookshelf Library</div>
-    <div class="footer-links">
-      <a href="/">Home</a>
-      <a href="/books.html">Books</a>
-      <a href="/bookmarks.html">Bookmarks</a>
-      <a href="/wishlist.html">Wishlist</a>
-      <a href="/tags.html">Tags</a>
-      <a href="/analytics.html">Analytics</a>
-    </div>
-    <div class="footer-copyright">© 2024 Bookshelf Library. All rights reserved.</div>
-  </div>
+<div class="footer-content">
+<div class="footer-brand">📚 Bookshelf Library</div>
+<div class="footer-copyright">© 2026 Bookshelf Library. All rights reserved. (Skyy)</div>
+</div>
 </footer>
 
-<script src="/js/app.js"></script>
+<script>
+// Load books directly
+fetch('/api/books')
+  .then(function(r) { return r.json(); })
+  .then(function(books) {
+    var grid = document.getElementById('booksGrid');
+    if (!books || books.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="icon">📚</div><h2>No books yet</h2></div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < books.length; i++) {
+      var b = books[i];
+      html += '<div class="book-card">';
+      html += '<div class="book-cover" style="background:' + (b.color || '#5d4037') + '">';
+      html += '<span class="format-icon">' + (b.formatIcon || '📚') + '</span>';
+      html += '<span class="format-badge">' + (b.formatLabel || b.format || 'Book') + '</span>';
+      html += '</div>';
+      html += '<div class="book-info">';
+      html += '<h3>' + b.title + '</h3>';
+      html += '<p class="author">' + (b.author || 'Unknown') + '</p>';
+      html += '</div>';
+      html += '<div class="book-actions">';
+      html += '<button class="btn-read" onclick="window.location.href=\'/reader.html?id=' + b.id + '\'">📖 Read</button>';
+      html += '<button class="btn-download" onclick="window.location.href=\'/api/books/' + b.id + '/file\'">⬇️ Download</button>';
+      html += '</div>';
+      html += '</div>';
+    }
+    grid.innerHTML = html;
+  })
+  .catch(function(e) { console.error('Error:', e); });
+</script>
+
 </body>
 </html>

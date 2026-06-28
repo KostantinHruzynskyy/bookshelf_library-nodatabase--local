@@ -129,6 +129,42 @@ app.get("/api/books", (req, res) => {
   }
 });
 
+/* debug - show books as HTML */
+app.get("/debug", (req, res) => {
+  try {
+    const books = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
+    let html = `<h1>Books (${books.length})</h1><ul>`;
+    books.forEach(b => {
+      html += `<li><a href="/reader.html?id=${b.id}">${b.title}</a> by ${b.author}</li>`;
+    });
+    html += "</ul>";
+    res.send(html);
+  } catch (e) {
+    res.send("Error: " + e.message);
+  }
+});
+
+/* search books - MUST be before /:id routes */
+app.get("/api/books/search", (req, res) => {
+  try {
+    const { q } = req.query;
+    let books = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
+    
+    if (q && q.trim()) {
+      const term = q.toLowerCase().trim();
+      books = books.filter(b => 
+        b.title.toLowerCase().includes(term) ||
+        (b.author && b.author.toLowerCase().includes(term)) ||
+        (b.description && b.description.toLowerCase().includes(term))
+      );
+    }
+    
+    res.json(books);
+  } catch (error) {
+    res.status(500).json({ error: "search_failed", message: error.message });
+  }
+});
+
 /* add book (text content) */
 app.post("/api/books", (req, res) => {
   const { title, author, description, color, content } = req.body;
@@ -499,6 +535,8 @@ app.delete("/api/books/:bookId/progress", authRequired, deleteProgress);
 /* ---- NEW PAGES ---- */
 app.get("/notifications", (req, res) => servePage(req, res, "notifications"));
 app.get("/notifications.html", (req, res) => servePage(req, res, "notifications"));
+app.get("/books", (req, res) => servePage(req, res, "books"));
+app.get("/books.html", (req, res) => servePage(req, res, "books"));
 app.get("/bookmarks", (req, res) => servePage(req, res, "bookmarks"));
 app.get("/bookmarks.html", (req, res) => servePage(req, res, "bookmarks"));
 app.get("/wishlist", (req, res) => servePage(req, res, "wishlist"));
@@ -595,118 +633,26 @@ setInterval(async () => {
   }
 }, 3600000);
 
-/* ---- BOOKS API ROUTES ---- */
-/* ---- BOOKS API ROUTES ---- */
-// Nota: BooksRepository viene creato on-demand per evitare problemi di init
+/* ---- API ROUTES (Using JSON file) ---- */
 
-// Lista tutti i libri (pubblica)
-app.get("/api/books", (req, res) => {
-  try {
-    const { BooksRepository } = require("./src/repositories/books");
-    const booksRepo = new BooksRepository();
-    const books = booksRepo.getAll();
-    res.json(books);
-  } catch (error) {
-    logger.error("Failed to fetch books", { error: error.message });
-    res.status(500).json({ error: "fetch_failed", message: error.message });
-  }
-});
-
-// Ricerca libri (DEVE essere prima di /:id)
+// Ricerca libri
 app.get("/api/books/search", (req, res) => {
   try {
-    const { BooksRepository } = require("./src/repositories/books");
-    const booksRepo = new BooksRepository();
     const { q, tag, category, format } = req.query;
-    let books;
+    let books = JSON.parse(fs.readFileSync(BOOKS_FILE, "utf8"));
     
     if (q) {
-      books = booksRepo.search(q);
-    } else if (tag) {
-      books = booksRepo.getByTag(tag);
-    } else if (category) {
-      books = booksRepo.getByCategory(category);
-    } else if (format) {
-      books = booksRepo.getByFormat(format);
-    } else {
-      books = booksRepo.getAll();
+      const term = q.toLowerCase();
+      books = books.filter(b => 
+        b.title.toLowerCase().includes(term) ||
+        (b.author && b.author.toLowerCase().includes(term)) ||
+        (b.description && b.description.toLowerCase().includes(term))
+      );
     }
     
     res.json(books);
   } catch (error) {
-    logger.error("Search failed", { error: error.message });
     res.status(500).json({ error: "search_failed", message: error.message });
-  }
-});
-
-// Download libro (DEVE essere prima di /:id)
-app.get("/api/books/:id/download", (req, res) => {
-  try {
-    const { BooksRepository } = require("./src/repositories/books");
-    const booksRepo = new BooksRepository();
-    const book = booksRepo.getById(req.params.id);
-    if (!book) return res.status(404).json({ error: "book_not_found" });
-    
-    const filePath = path.join(__dirname, book.file);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: "file_not_found" });
-    }
-    
-    // Incrementa contatore download
-    booksRepo.incrementDownloads(req.params.id);
-    
-    res.download(filePath, path.basename(filePath));
-  } catch (error) {
-    logger.error("Download failed", { error: error.message });
-    res.status(500).json({ error: "download_failed", message: error.message });
-  }
-});
-
-// Stream libro per lettura
-app.get("/api/books/:id/read", (req, res) => {
-  try {
-    const { BooksRepository } = require("./src/repositories/books");
-    const booksRepo = new BooksRepository();
-    const book = booksRepo.getById(req.params.id);
-    if (!book) return res.status(404).json({ error: "book_not_found" });
-    
-    const readPath = book.readFilePath || book.file;
-    const filePath = path.join(__dirname, readPath);
-    
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: "file_not_found" });
-    }
-    
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = {
-      '.txt': 'text/plain; charset=utf-8',
-      '.html': 'text/html; charset=utf-8',
-      '.htm': 'text/html; charset=utf-8',
-      '.md': 'text/markdown; charset=utf-8',
-      '.pdf': 'application/pdf',
-      '.epub': 'application/epub+zip'
-    }[ext] || 'application/octet-stream';
-    
-    res.setHeader('Content-Type', contentType);
-    const stream = fs.createReadStream(filePath);
-    stream.pipe(res);
-  } catch (error) {
-    logger.error("Read failed", { error: error.message });
-    res.status(500).json({ error: "read_failed", message: error.message });
-  }
-});
-
-// Singolo libro per ID (DEVE essere dopo /search, /download, /read)
-app.get("/api/books/:id", (req, res) => {
-  try {
-    const { BooksRepository } = require("./src/repositories/books");
-    const booksRepo = new BooksRepository();
-    const book = booksRepo.getById(req.params.id);
-    if (!book) return res.status(404).json({ error: "book_not_found" });
-    res.json(book);
-  } catch (error) {
-    logger.error("Failed to fetch book", { error: error.message });
-    res.status(500).json({ error: "fetch_failed", message: error.message });
   }
 });
 
