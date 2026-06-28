@@ -12,14 +12,13 @@ function searchBooks(query, options) {
   try {
     books = JSON.parse(fs.readFileSync(BOOKS_FILE, 'utf8'));
   } catch (e) {
-    return { results: [], total: 0 };
+    books = [];
   }
 
   const term = (query || '').toLowerCase().trim();
-  if (!term) return { results: books, total: books.length };
 
   // Search across multiple fields
-  let results = books.filter(b => {
+  let results = term ? books.filter(b => {
     const searchable = [
       b.title, b.author, b.description,
       b.publisher, b.isbn, b.formatLabel
@@ -28,7 +27,7 @@ function searchBooks(query, options) {
     // Simple tokenized search with AND logic
     const tokens = term.split(/\s+/).filter(Boolean);
     return tokens.every(t => searchable.includes(t));
-  });
+  }) : books;
 
   // Apply filters
   if (options.format) {

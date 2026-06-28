@@ -400,6 +400,47 @@ app.get('/api/admin/stats', authRequired, adminRequired, statsRoute);
 app.get('/api/admin/books', authRequired, adminRequired, listAllBooksRoute);
 app.put('/api/admin/books/:bookId/toggle', authRequired, adminRequired, toggleBookActiveRoute);
 
+/* ---- STATIC PAGES ---- */
+// Function to serve HTML pages
+function servePage(req, res, page) {
+  res.sendFile(path.join(__dirname, `public/pages/${page}.html`));
+}
+
+// Home page
+app.get("/", (req, res) => servePage(req, res, "index"));
+
+// Login page - both /login and /login.html
+app.get("/login", (req, res) => servePage(req, res, "login"));
+app.get("/login.html", (req, res) => servePage(req, res, "login"));
+
+// Register page - both /register and /register.html
+app.get("/register", (req, res) => servePage(req, res, "register"));
+app.get("/register.html", (req, res) => servePage(req, res, "register"));
+
+// Dashboard page - both /dashboard and /dashboard.html
+app.get("/dashboard", (req, res) => servePage(req, res, "dashboard"));
+app.get("/dashboard.html", (req, res) => servePage(req, res, "dashboard"));
+
+// Profile page - both /profile and /profile.html
+app.get("/profile", (req, res) => servePage(req, res, "profile"));
+app.get("/profile.html", (req, res) => servePage(req, res, "profile"));
+
+// Admin page - both /admin and /admin.html
+app.get("/admin", (req, res) => servePage(req, res, "admin"));
+app.get("/admin.html", (req, res) => servePage(req, res, "admin"));
+
+// Reader page - both /reader and /reader.html
+app.get("/reader", (req, res) => servePage(req, res, "reader"));
+app.get("/reader.html", (req, res) => servePage(req, res, "reader"));
+
+// Forgot password page
+app.get("/forgot-password", (req, res) => servePage(req, res, "forgot-password"));
+app.get("/forgot-password.html", (req, res) => servePage(req, res, "forgot-password"));
+
+// Reset password page
+app.get("/reset-password", (req, res) => servePage(req, res, "reset-password"));
+app.get("/reset-password.html", (req, res) => servePage(req, res, "reset-password"));
+
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });

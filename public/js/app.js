@@ -1,4 +1,5 @@
 let books = [];
+let currentBook = null;
 
 const library = document.getElementById("library");
 const modal = document.getElementById("modal");
@@ -9,16 +10,23 @@ const readBtn = document.getElementById("readBtn");
 const searchInput = document.getElementById("search");
 const countEl = document.getElementById("bookCount");
 
-/* FETCH BOOKS FROM API */
-fetch("/api/books")
-  .then(res => res.json())
-  .then(data => {
-    books = data;
+document.addEventListener("DOMContentLoaded", function() {
+  fetchBooks();
+  setupEventListeners();
+  updateAuthUI();
+});
+
+async function fetchBooks() {
+  try {
+    const res = await fetch("/api/books");
+    books = await res.json();
     renderBooks(books);
-  })
-  .catch(() => {
-    library.innerHTML = '<p class="empty-msg">Could not load books. Try adding some from the admin panel!</p>';
-  });
+  } catch (err) {
+    if (library) {
+      library.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">❌</div><h2>Failed to load books</h2></div>';
+    }
+  }
+}
 
 /* RENDER SHELVES */
 function renderBooks(data) {
@@ -98,49 +106,74 @@ function closeModal() {
   currentBook = null;
 }
 
-/* close modal on outside click */
-modal.addEventListener("click", (e) => {
-  if (e.target === modal) closeModal();
-});
-
-/* close on Escape key */
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeModal();
-});
-
-/* SEARCH */
-searchInput.addEventListener("input", e => {
-  const term = e.target.value.toLowerCase();
-  const filtered = books.filter(b =>
-    b.title.toLowerCase().includes(term) ||
-    b.author.toLowerCase().includes(term) ||
-    (b.description && b.description.toLowerCase().includes(term))
-  );
-  renderBooks(filtered);
-});
-
-/* AUTH UI */
-function updateAuthUI() {
-  fetch('/api/auth/me')
-    .then(r => r.ok ? r.json() : null)
-    .then(data => {
-      if (data && data.ok) {
-        document.getElementById('authLinks').style.display = 'none';
-        document.getElementById('userLinks').style.display = 'inline-flex';
-        document.getElementById('userName').textContent = '👄 ' + data.user.username;
-      } else {
-        document.getElementById('authLinks').style.display = 'inline-flex';
-        document.getElementById('userLinks').style.display = 'none';
+function setupEventListeners() {
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+  
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+  
+  if (searchInput) {
+    searchInput.addEventListener("input", e => {
+      const term = e.target.value.toLowerCase();
+      const filtered = books.filter(b =>
+        b.title.toLowerCase().includes(term) ||
+        b.author.toLowerCase().includes(term) ||
+        (b.description && b.description.toLowerCase().includes(term))
+      );
+      renderBooks(filtered);
+    });
+  }
+  
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/';
+      } catch (err) {
+        console.error("Logout failed:", err);
       }
-    })
-    .catch(function() {});
+    });
+  }
 }
-var logoutBtn = document.getElementById('logoutBtn');
-if (logoutBtn) logoutBtn.addEventListener('click', function(e) {
-  e.preventDefault();
-  fetch('/api/auth/logout', { method: 'POST' }).then(function() { window.location.reload(); });
-});
-updateAuthUI();
+
+async function updateAuthUI() {
+  try {
+    const res = await fetch('/api/auth/me');
+    const data = res.ok ? await res.json() : null;
+    
+    const authLinks = document.getElementById('authLinks');
+    const userLinks = document.getElementById('userLinks');
+    const navLogin = document.getElementById('navLogin');
+    const navRegister = document.getElementById('navRegister');
+    const navDashboard = document.getElementById('navDashboard');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    if (data && data.ok) {
+      if (authLinks) authLinks.style.display = 'none';
+      if (userLinks) userLinks.style.display = 'inline-flex';
+      if (navLogin) navLogin.style.display = 'none';
+      if (navRegister) navRegister.style.display = 'none';
+      if (navDashboard) navDashboard.style.display = 'inline-flex';
+      if (logoutBtn) logoutBtn.style.display = 'inline-flex';
+    } else {
+      if (authLinks) authLinks.style.display = 'inline-flex';
+      if (userLinks) userLinks.style.display = 'none';
+      if (navLogin) navLogin.style.display = 'inline-flex';
+      if (navRegister) navRegister.style.display = 'inline-flex';
+      if (navDashboard) navDashboard.style.display = 'none';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+  } catch (err) {
+    console.error("Auth check failed:", err);
+  }
+}
 
 /* UTILITY */
 function escapeHtml(str) {
