@@ -121,6 +121,7 @@ function logRequest(req, res, duration) {
     ip: req.ip || req.connection.remoteAddress,
     userAgent: req.get('user-agent'),
     userId: req.user?.id || null,
+    // Nota: req.user potrebbe non essere disponibile se il middleware auth non è applicato
     statusCode: res.statusCode,
     duration: `${duration}ms`
   };

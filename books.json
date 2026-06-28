@@ -13,5 +13,20 @@
     "fileSize": 2721930,
     "extractedText": null,
     "readFilePath": "books/uploads/1782632221130-905541042.pdf"
+  },
+  {
+    "id": 1782640143341,
+    "title": "Debug It Find, Repair, and Prevent Bug",
+    "author": "test2",
+    "description": "test2",
+    "color": "#1a1a6e",
+    "file": "books/uploads/1782640143320-106723264.pdf",
+    "originalFile": "Debug_It_Find,_Repair,_and_Prevent_Bug.pdf",
+    "format": ".pdf",
+    "formatIcon": "📕",
+    "formatLabel": "PDF",
+    "fileSize": 2721930,
+    "extractedText": null,
+    "readFilePath": "books/uploads/1782640143320-106723264.pdf"
   }
 ]

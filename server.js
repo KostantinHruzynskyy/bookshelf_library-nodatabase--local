@@ -567,11 +567,19 @@ app.get("/api/health/detailed", async (req, res) => {
 });
 
 /* ---- LOGGING MIDDLEWARE ---- */
-const { logRequest, logger } = require("./src/config/logger");
+const { logger } = require("./src/config/logger");
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
-    logRequest(req, res, Date.now() - start);
+    const duration = Date.now() - start;
+    if (res.statusCode >= 400) {
+      logger.warn('HTTP Request', {
+        method: req.method,
+        url: req.originalUrl,
+        statusCode: res.statusCode,
+        duration: `${duration}ms`
+      });
+    }
   });
   next();
 });
@@ -584,6 +592,75 @@ setInterval(async () => {
     logger.error('Failed to update overdue status', { error: e.message });
   }
 }, 3600000);
+
+/* ---- EXPORT ROUTES ---- */
+const { handleExportUserCSV, handleExportBooksCSV, handleExportStats } = require("./src/services/export-service");
+app.get("/api/export/user/csv", authRequired, handleExportUserCSV);
+app.get("/api/export/books/csv", handleExportBooksCSV);
+app.get("/api/admin/export/stats", authRequired, adminRequired, handleExportStats);
+
+/* ---- SSE NOTIFICATIONS ---- */
+const { handleSSE } = require("./src/services/notifications-realtime");
+app.get("/api/notifications/stream", authRequired, handleSSE);
+
+/* ---- ANALYTICS ENHANCED ---- */
+const analyticsService = require("./src/services/analytics-service");
+app.get("/api/analytics/books-by-category", async (req, res) => {
+  try {
+    const db = require("./src/database/connection").getDb();
+    const data = db.prepare(`
+      SELECT c.name_key as category, COUNT(b.id) as count
+      FROM categories c LEFT JOIN books b ON c.id = b.category_id
+      GROUP BY c.id ORDER BY count DESC
+    `).all();
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/analytics/books-by-format", async (req, res) => {
+  try {
+    const db = require("./src/database/connection").getDb();
+    const data = db.prepare('SELECT file_format as format, COUNT(*) as count FROM books GROUP BY file_format ORDER BY count DESC').all();
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/analytics/user-activity", authRequired, adminRequired, async (req, res) => {
+  try {
+    const db = require("./src/database/connection").getDb();
+    const data = db.prepare(`
+      SELECT DATE(created_at) as date, COUNT(*) as count
+      FROM users WHERE created_at >= DATE('now', '-30 days')
+      GROUP BY DATE(created_at) ORDER BY date
+    `).all();
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/analytics/loan-stats", authRequired, adminRequired, async (req, res) => {
+  try {
+    const db = require("./src/database/connection").getDb();
+    const stats = {
+      total: db.prepare('SELECT COUNT(*) as c FROM loans').get().c,
+      active: db.prepare("SELECT COUNT(*) as c FROM loans WHERE status = 'active'").get().c,
+      overdue: db.prepare("SELECT COUNT(*) as c FROM loans WHERE status = 'overdue'").get().c,
+      returned: db.prepare("SELECT COUNT(*) as c FROM loans WHERE status = 'returned'").get().c,
+      byMonth: db.prepare(`
+        SELECT strftime('%Y-%m', loaned_at) as month, COUNT(*) as count
+        FROM loans GROUP BY month ORDER BY month DESC LIMIT 12
+      `).all()
+    };
+    res.json({ success: true, stats });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");

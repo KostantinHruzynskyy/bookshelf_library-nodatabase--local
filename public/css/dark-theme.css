@@ -1,0 +1,74 @@
+:root {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3d3d3d;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --accent-color: #8b4513;
+  --accent-hover: #a0522d;
+  --border-color: #404040;
+  --shadow: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .container {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .header {
+  background: linear-gradient(135deg, #5d2e0c, #7a3d12);
+}
+
+[data-theme="dark"] .sidebar {
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .card {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] button {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+[data-theme="dark"] button:hover {
+  background-color: var(--accent-hover);
+}
+
+[data-theme="dark"] a {
+  color: #d4a574;
+}
+
+[data-theme="dark"] .modal {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .table {
+  background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .table th {
+  background-color: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .table tr:nth-child(even) {
+  background-color: var(--bg-primary);
+}
